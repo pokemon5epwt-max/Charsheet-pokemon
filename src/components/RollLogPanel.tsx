@@ -2,6 +2,7 @@ import { Dices, Eye, EyeOff, Lock, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { selectActiveCharacter, useCharacterStore } from '../store/useCharacterStore';
 import { TYPE_STYLES } from '../utils/pokemon5eRules';
+import { PokeballIcon } from './PokemonAccessories';
 
 interface RollLogPanelProps {
   onCloseMobile?: () => void;
@@ -175,7 +176,8 @@ export function RollLogPanel({ onCloseMobile }: RollLogPanelProps) {
       {/* Roll Log List */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2.5">
         {rollLog.length === 0 ? (
-          <div className="p-6 text-center space-y-1.5">
+          <div className="p-6 text-center space-y-2 flex flex-col items-center">
+            <PokeballIcon variant="poke" className="w-8 h-8 opacity-65" />
             <p className="text-xs font-medium text-slate-300">No rolls yet</p>
             <p className="text-xs text-slate-500">
               Click any Ability, Saving Throw, Skill, or Move button to roll with full modifier breakdown.

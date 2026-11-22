@@ -2,6 +2,7 @@ import { Download, FileUp, History, Maximize2, Minimize2, RotateCcw } from 'luci
 import { useState } from 'react';
 import { useCharacterStore } from '../store/useCharacterStore';
 import { setObrPopoverSize } from '../utils/obrBridge';
+import { PokedexLens } from './PokemonAccessories';
 
 interface TopBarProps {
   onOpenImport: () => void;
@@ -27,8 +28,9 @@ export function TopBar({
   };
 
   return (
-    <header className="h-12 border-b border-[#252A38] bg-[#13161F] px-3 sm:px-4 lg:px-6 flex items-center justify-between gap-2 shrink-0">
-      <div className="flex items-center gap-2 min-w-0">
+    <header className="h-12 border-b border-rose-500/25 bg-gradient-to-r from-[#1A1320] via-[#141722] to-[#13161F] px-3 sm:px-4 lg:px-6 flex items-center justify-between gap-2 shrink-0">
+      <div className="flex items-center gap-2.5 min-w-0">
+        <PokedexLens className="w-6 h-6" />
         <span className="font-display text-sm sm:text-base font-semibold tracking-tight text-slate-100 whitespace-nowrap shrink-0">
           Pokémon 5e
         </span>
