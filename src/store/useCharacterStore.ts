@@ -4,6 +4,7 @@ import {
   ActiveCharacter,
   DiceIntegrationMode,
   InitiativeEntry,
+  InitiativeSyncState,
   Move,
   ObrState,
   PartyWorkspace,
@@ -14,7 +15,7 @@ import {
   TrainerSheet,
 } from '../types/pokemon5e';
 import { executeRoll, RollRequest } from '../utils/diceEngine';
-import { broadcastRollToObr } from '../utils/obrBridge';
+import { broadcastRollToObr, syncInitiativeToObr } from '../utils/obrBridge';
 import {
   createEmptySaves,
   createEmptySkills,
@@ -109,6 +110,39 @@ function upsertInitiativeFromRoll(
   };
 }
 
+function isRemoteInitiativeEquivalent(
+  state: {
+    initiativeList: InitiativeEntry[];
+    initiativeTurnIndex: number;
+    initiativeRound: number;
+  },
+  remote: InitiativeSyncState
+): boolean {
+  if (state.initiativeRound !== remote.round) return false;
+  const visibleLocal = state.initiativeList.filter((e) => e.visibility === 'visible');
+  if (visibleLocal.length !== remote.entries.length) return false;
+
+  const localActiveId = state.initiativeList[state.initiativeTurnIndex]?.id;
+  const remoteActiveId = remote.entries[remote.turnIndex]?.id;
+  if (localActiveId && remoteActiveId && localActiveId !== remoteActiveId) {
+    return false;
+  }
+
+  for (let i = 0; i < visibleLocal.length; i += 1) {
+    const a = visibleLocal[i];
+    const b = remote.entries[i];
+    if (
+      a.id !== b.id ||
+      a.initiative !== b.initiative ||
+      a.characterName !== b.characterName ||
+      a.updatedAt !== b.updatedAt
+    ) {
+      return false;
+    }
+  }
+  return true;
+}
+
 interface CharacterStoreState {
   party: PartyWorkspace;
   activeCharacterId: 'trainer' | string;
@@ -123,6 +157,7 @@ interface CharacterStoreState {
   initiativeList: InitiativeEntry[];
   initiativeTurnIndex: number;
   initiativeRound: number;
+  initiativeUpdatedAt?: string;
 
   // Selection & Controls
   setActiveCharacter: (id: 'trainer' | string) => void;
@@ -173,7 +208,10 @@ interface CharacterStoreState {
   setInitiativeTurnIndex: (index: number) => void;
   nextInitiativeTurn: () => void;
   prevInitiativeTurn: () => void;
+  setInitiativeRound: (round: number) => void;
+  resetInitiativeRound: () => void;
   clearInitiative: () => void;
+  syncRemoteInitiative: (remote: InitiativeSyncState) => void;
 }
 
 export const useCharacterStore = create<CharacterStoreState>()(
@@ -189,6 +227,7 @@ export const useCharacterStore = create<CharacterStoreState>()(
       initiativeList: [],
       initiativeTurnIndex: 0,
       initiativeRound: 1,
+      initiativeUpdatedAt: undefined,
       obrState: {
         isAvailable: false,
         isReady: false,
@@ -423,13 +462,27 @@ export const useCharacterStore = create<CharacterStoreState>()(
           ownerId: obrState.playerId || 'local-player',
         });
 
+        const now = new Date().toISOString();
         set((state) => {
           const initiativePatch = upsertInitiativeFromRoll(state, entry);
           return {
             rollLog: [entry, ...state.rollLog].slice(0, 60),
             ...(initiativePatch ?? {}),
+            ...(initiativePatch && entry.visibility === 'visible'
+              ? { initiativeUpdatedAt: now }
+              : {}),
           };
         });
+
+        if (entry.category === 'initiative' && entry.visibility === 'visible') {
+          const current = get();
+          void syncInitiativeToObr({
+            entries: current.initiativeList,
+            turnIndex: current.initiativeTurnIndex,
+            round: current.initiativeRound,
+            updatedAt: current.initiativeUpdatedAt || now,
+          });
+        }
 
         void broadcastRollToObr(entry, diceIntegrationMode === 'obr-dice-plus');
         return entry;
@@ -506,10 +559,11 @@ export const useCharacterStore = create<CharacterStoreState>()(
           rollLogClearedAt: new Date().toISOString(),
         }),
 
-      addManualInitiative: ({ name, initiative, dexMod = 0, ac, hpText }) =>
+      addManualInitiative: ({ name, initiative, dexMod = 0, ac, hpText }) => {
+        const trimmed = name.trim();
+        if (!trimmed) return;
+        const now = new Date().toISOString();
         set((state) => {
-          const trimmed = name.trim();
-          if (!trimmed) return state;
           const id = createId('npc-init');
           const entry: InitiativeEntry = {
             id,
@@ -524,7 +578,7 @@ export const useCharacterStore = create<CharacterStoreState>()(
             ac,
             hpText: hpText?.trim() || undefined,
             isNpc: true,
-            updatedAt: new Date().toISOString(),
+            updatedAt: now,
           };
           const sorted = sortInitiativeEntries([...state.initiativeList, entry]);
           const nextIndex = getNextTurnIndexAfterReorder(
@@ -535,14 +589,24 @@ export const useCharacterStore = create<CharacterStoreState>()(
           return {
             initiativeList: sorted,
             initiativeTurnIndex: nextIndex,
+            initiativeUpdatedAt: now,
           };
-        }),
+        });
+        const current = get();
+        void syncInitiativeToObr({
+          entries: current.initiativeList,
+          turnIndex: current.initiativeTurnIndex,
+          round: current.initiativeRound,
+          updatedAt: current.initiativeUpdatedAt || now,
+        });
+      },
 
-      updateInitiativeScore: (id, initiative) =>
+      updateInitiativeScore: (id, initiative) => {
+        const now = new Date().toISOString();
         set((state) => {
           const updated = state.initiativeList.map((entry) =>
             entry.id === id
-              ? { ...entry, initiative, updatedAt: new Date().toISOString() }
+              ? { ...entry, initiative, updatedAt: now }
               : entry
           );
           const sorted = sortInitiativeEntries(updated);
@@ -554,10 +618,20 @@ export const useCharacterStore = create<CharacterStoreState>()(
           return {
             initiativeList: sorted,
             initiativeTurnIndex: nextIndex,
+            initiativeUpdatedAt: now,
           };
-        }),
+        });
+        const current = get();
+        void syncInitiativeToObr({
+          entries: current.initiativeList,
+          turnIndex: current.initiativeTurnIndex,
+          round: current.initiativeRound,
+          updatedAt: current.initiativeUpdatedAt || now,
+        });
+      },
 
-      removeInitiativeEntry: (id) =>
+      removeInitiativeEntry: (id) => {
+        const now = new Date().toISOString();
         set((state) => {
           const filtered = state.initiativeList.filter((entry) => entry.id !== id);
           const nextIndex = getNextTurnIndexAfterReorder(
@@ -569,17 +643,38 @@ export const useCharacterStore = create<CharacterStoreState>()(
             initiativeList: filtered,
             initiativeTurnIndex: nextIndex,
             initiativeRound: filtered.length === 0 ? 1 : state.initiativeRound,
+            initiativeUpdatedAt: now,
           };
-        }),
+        });
+        const current = get();
+        void syncInitiativeToObr({
+          entries: current.initiativeList,
+          turnIndex: current.initiativeTurnIndex,
+          round: current.initiativeRound,
+          updatedAt: current.initiativeUpdatedAt || now,
+        });
+      },
 
-      setInitiativeTurnIndex: (index) =>
+      setInitiativeTurnIndex: (index) => {
+        const now = new Date().toISOString();
         set((state) => {
-          if (state.initiativeList.length === 0) return { initiativeTurnIndex: 0 };
+          if (state.initiativeList.length === 0) {
+            return { initiativeTurnIndex: 0, initiativeUpdatedAt: now };
+          }
           const clamped = Math.max(0, Math.min(index, state.initiativeList.length - 1));
-          return { initiativeTurnIndex: clamped };
-        }),
+          return { initiativeTurnIndex: clamped, initiativeUpdatedAt: now };
+        });
+        const current = get();
+        void syncInitiativeToObr({
+          entries: current.initiativeList,
+          turnIndex: current.initiativeTurnIndex,
+          round: current.initiativeRound,
+          updatedAt: current.initiativeUpdatedAt || now,
+        });
+      },
 
-      nextInitiativeTurn: () =>
+      nextInitiativeTurn: () => {
+        const now = new Date().toISOString();
         set((state) => {
           const count = state.initiativeList.length;
           if (count === 0) return state;
@@ -587,12 +682,27 @@ export const useCharacterStore = create<CharacterStoreState>()(
             return {
               initiativeTurnIndex: 0,
               initiativeRound: state.initiativeRound + 1,
+              initiativeUpdatedAt: now,
             };
           }
-          return { initiativeTurnIndex: state.initiativeTurnIndex + 1 };
-        }),
+          return {
+            initiativeTurnIndex: state.initiativeTurnIndex + 1,
+            initiativeUpdatedAt: now,
+          };
+        });
+        const current = get();
+        if (current.initiativeList.length > 0) {
+          void syncInitiativeToObr({
+            entries: current.initiativeList,
+            turnIndex: current.initiativeTurnIndex,
+            round: current.initiativeRound,
+            updatedAt: current.initiativeUpdatedAt || now,
+          });
+        }
+      },
 
-      prevInitiativeTurn: () =>
+      prevInitiativeTurn: () => {
+        const now = new Date().toISOString();
         set((state) => {
           const count = state.initiativeList.length;
           if (count === 0) return state;
@@ -601,18 +711,104 @@ export const useCharacterStore = create<CharacterStoreState>()(
               return {
                 initiativeTurnIndex: count - 1,
                 initiativeRound: state.initiativeRound - 1,
+                initiativeUpdatedAt: now,
               };
             }
             return state;
           }
-          return { initiativeTurnIndex: state.initiativeTurnIndex - 1 };
-        }),
+          return {
+            initiativeTurnIndex: state.initiativeTurnIndex - 1,
+            initiativeUpdatedAt: now,
+          };
+        });
+        const current = get();
+        if (current.initiativeList.length > 0) {
+          void syncInitiativeToObr({
+            entries: current.initiativeList,
+            turnIndex: current.initiativeTurnIndex,
+            round: current.initiativeRound,
+            updatedAt: current.initiativeUpdatedAt || now,
+          });
+        }
+      },
 
-      clearInitiative: () =>
+      setInitiativeRound: (round) => {
+        const clamped = Math.max(1, Math.floor(round));
+        const now = new Date().toISOString();
+        set({
+          initiativeRound: clamped,
+          initiativeUpdatedAt: now,
+        });
+        const current = get();
+        void syncInitiativeToObr({
+          entries: current.initiativeList,
+          turnIndex: current.initiativeTurnIndex,
+          round: current.initiativeRound,
+          updatedAt: current.initiativeUpdatedAt || now,
+        });
+      },
+
+      resetInitiativeRound: () => {
+        const now = new Date().toISOString();
+        set({
+          initiativeRound: 1,
+          initiativeTurnIndex: 0,
+          initiativeUpdatedAt: now,
+        });
+        const current = get();
+        void syncInitiativeToObr({
+          entries: current.initiativeList,
+          turnIndex: current.initiativeTurnIndex,
+          round: current.initiativeRound,
+          updatedAt: current.initiativeUpdatedAt || now,
+        });
+      },
+
+      clearInitiative: () => {
+        const now = new Date().toISOString();
         set({
           initiativeList: [],
           initiativeTurnIndex: 0,
           initiativeRound: 1,
+          initiativeUpdatedAt: now,
+        });
+        void syncInitiativeToObr({
+          entries: [],
+          turnIndex: 0,
+          round: 1,
+          updatedAt: now,
+        });
+      },
+
+      syncRemoteInitiative: (remote) =>
+        set((state) => {
+          if (state.initiativeUpdatedAt && remote.updatedAt === state.initiativeUpdatedAt) {
+            return state;
+          }
+          if (isRemoteInitiativeEquivalent(state, remote)) {
+            return state;
+          }
+
+          const localHidden = state.initiativeList.filter((e) => e.visibility === 'hidden');
+          const merged = sortInitiativeEntries([...remote.entries, ...localHidden]);
+          const remoteActiveId = remote.entries[remote.turnIndex]?.id;
+
+          let nextTurnIndex = 0;
+          if (merged.length > 0) {
+            if (remoteActiveId) {
+              const idx = merged.findIndex((item) => item.id === remoteActiveId);
+              nextTurnIndex = idx >= 0 ? idx : Math.min(remote.turnIndex, merged.length - 1);
+            } else {
+              nextTurnIndex = Math.max(0, Math.min(remote.turnIndex, merged.length - 1));
+            }
+          }
+
+          return {
+            initiativeList: merged,
+            initiativeTurnIndex: nextTurnIndex,
+            initiativeRound: Math.max(1, Math.floor(remote.round)),
+            initiativeUpdatedAt: remote.updatedAt,
+          };
         }),
     }),
     {
@@ -628,6 +824,7 @@ export const useCharacterStore = create<CharacterStoreState>()(
         initiativeList: state.initiativeList,
         initiativeTurnIndex: state.initiativeTurnIndex,
         initiativeRound: state.initiativeRound,
+        initiativeUpdatedAt: state.initiativeUpdatedAt,
       }),
     }
   )

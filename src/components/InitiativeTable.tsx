@@ -3,7 +3,9 @@ import {
   ChevronRight,
   Dices,
   Lock,
+  Minus,
   Plus,
+  RotateCcw,
   Trash2,
   X,
 } from 'lucide-react';
@@ -28,6 +30,8 @@ export function InitiativeTable() {
   const setInitiativeTurnIndex = useCharacterStore((s) => s.setInitiativeTurnIndex);
   const nextInitiativeTurn = useCharacterStore((s) => s.nextInitiativeTurn);
   const prevInitiativeTurn = useCharacterStore((s) => s.prevInitiativeTurn);
+  const setInitiativeRound = useCharacterStore((s) => s.setInitiativeRound);
+  const resetInitiativeRound = useCharacterStore((s) => s.resetInitiativeRound);
   const clearInitiative = useCharacterStore((s) => s.clearInitiative);
 
   const [showAddForm, setShowAddForm] = useState(false);
@@ -98,50 +102,23 @@ export function InitiativeTable() {
   };
 
   const activeTurnEntry = initiativeList[initiativeTurnIndex];
+  const formattedRound = String(initiativeRound).padStart(2, '0');
 
   return (
     <main className="flex-1 overflow-y-auto p-3.5 sm:p-4 lg:p-6 space-y-4 gba-canvas-bg">
-      {/* Header & Turn Controls */}
+      {/* Header, Round Tracker & Turn Controls */}
       <section className="gba-panel p-3.5 sm:p-4 space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2.5">
           <div>
-            <div className="flex items-center gap-2.5">
-              <h1 className="font-display text-sm sm:text-base font-bold text-white uppercase">
-                Initiative Order
-              </h1>
-              <span className="font-mono tabular-nums text-[11px] font-bold text-[#090D12] bg-[#F6C445] border-2 border-[#090D12] px-2 py-0.5">
-                R{initiativeRound}
-              </span>
-            </div>
-            <p className="text-xs text-slate-300 mt-1">
-              {activeTurnEntry
-                ? `Active Turn: ${activeTurnEntry.characterName} (${activeTurnEntry.playerName})`
-                : 'Auto-captures Initiative rolls from you and players in Owlbear Rodeo.'}
+            <h1 className="font-display text-sm sm:text-base font-bold text-white uppercase">
+              Initiative &amp; Round Tracker
+            </h1>
+            <p className="text-xs text-slate-300 mt-0.5">
+              Urutan giliran &amp; round otomatis tersinkronisasi untuk DM dan seluruh player.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-1.5">
-            {initiativeList.length > 0 && (
-              <>
-                <button
-                  type="button"
-                  onClick={prevInitiativeTurn}
-                  title="Previous Turn"
-                  className="gba-btn inline-flex items-center justify-center p-1.5 text-slate-200 bg-[#131A22] hover:bg-[#232F3E] cursor-pointer"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-                <button
-                  type="button"
-                  onClick={nextInitiativeTurn}
-                  className="gba-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-[#090D12] bg-[#F6C445] hover:bg-[#FBD160] cursor-pointer"
-                >
-                  <span>Next Turn</span>
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-              </>
-            )}
-
             <button
               type="button"
               onClick={handleRollActiveInitiative}
@@ -177,6 +154,96 @@ export function InitiativeTable() {
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
+            )}
+          </div>
+        </div>
+
+        {/* Dedicated Round & Active Turn HUD */}
+        <div className="gba-well p-2.5 flex flex-wrap items-center justify-between gap-2.5">
+          {/* Round Counter Controls */}
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-[#1A232E] border-2 border-[#090D12] px-2.5 py-1">
+              <span className="font-display text-[10px] font-bold uppercase tracking-wider text-slate-300">
+                Round
+              </span>
+              <span
+                className="font-mono tabular-nums text-sm sm:text-base font-bold text-[#090D12] bg-[#F6C445] border-2 border-[#090D12] px-2 py-0.5 leading-none"
+                aria-live="polite"
+              >
+                {formattedRound}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setInitiativeRound(initiativeRound - 1)}
+                disabled={initiativeRound <= 1}
+                title="Decrease Round"
+                aria-label="Decrease Round"
+                className="gba-btn inline-flex items-center justify-center w-7 h-7 bg-[#131A22] hover:bg-[#232F3E] disabled:opacity-40 disabled:cursor-not-allowed text-slate-200 cursor-pointer"
+              >
+                <Minus className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setInitiativeRound(initiativeRound + 1)}
+                title="Increase Round"
+                aria-label="Increase Round"
+                className="gba-btn inline-flex items-center justify-center w-7 h-7 bg-[#131A22] hover:bg-[#232F3E] text-slate-200 cursor-pointer"
+              >
+                <Plus className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={resetInitiativeRound}
+                disabled={initiativeRound === 1 && initiativeTurnIndex === 0}
+                title="Reset to Round 1, Turn 1"
+                className="gba-btn inline-flex items-center gap-1 px-2 h-7 text-[11px] font-mono text-slate-300 hover:text-white bg-[#131A22] hover:bg-[#232F3E] disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>R1</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Active Turn Status & Turn Stepper */}
+          <div className="flex flex-wrap items-center gap-2 ml-auto">
+            {activeTurnEntry ? (
+              <div className="text-xs text-right mr-1">
+                <div className="font-mono tabular-nums text-[10px] text-slate-400">
+                  Turn {initiativeTurnIndex + 1}/{initiativeList.length}
+                </div>
+                <div className="font-display text-xs font-bold text-[#F6C445] truncate max-w-[165px]">
+                  ▶ {activeTurnEntry.characterName}
+                </div>
+              </div>
+            ) : (
+              <span className="text-xs text-slate-400">
+                Belum ada combatant di arena
+              </span>
+            )}
+
+            {initiativeList.length > 0 && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={prevInitiativeTurn}
+                  title="Previous Turn"
+                  aria-label="Previous Turn"
+                  className="gba-btn inline-flex items-center justify-center p-1.5 text-slate-200 bg-[#131A22] hover:bg-[#232F3E] cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={nextInitiativeTurn}
+                  className="gba-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-[#090D12] bg-[#F6C445] hover:bg-[#FBD160] cursor-pointer"
+                >
+                  <span>Next Turn</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
             )}
           </div>
         </div>

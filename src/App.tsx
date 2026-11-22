@@ -21,6 +21,7 @@ export default function App() {
   const setObrState = useCharacterStore((s) => s.setObrState);
   const appendRemoteRoll = useCharacterStore((s) => s.appendRemoteRoll);
   const mergeRoomRolls = useCharacterStore((s) => s.mergeRoomRolls);
+  const syncRemoteInitiative = useCharacterStore((s) => s.syncRemoteInitiative);
 
   const [activeTab, setActiveTab] = useState<'sheet' | 'initiative' | 'history'>('sheet');
   const [showImportModal, setShowImportModal] = useState(false);
@@ -36,9 +37,10 @@ export default function App() {
       onObrStateChange: setObrState,
       onRemoteRoll: appendRemoteRoll,
       onSyncRoomRolls: mergeRoomRolls,
+      onSyncInitiative: syncRemoteInitiative,
     });
     return cleanup;
-  }, [setObrState, appendRemoteRoll, mergeRoomRolls]);
+  }, [setObrState, appendRemoteRoll, mergeRoomRolls, syncRemoteInitiative]);
 
   // Track unread rolls when History tab is not currently open on < xl viewports
   useEffect(() => {
@@ -156,19 +158,27 @@ export default function App() {
           </button>
         </div>
 
-        {currentTurn && (
-          <button
-            type="button"
-            onClick={() => handleSelectTab('initiative')}
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs text-[#F6C445] hover:text-amber-200 truncate max-w-[220px] cursor-pointer shrink-0"
-          >
-            <span className="font-mono tabular-nums text-[10px] text-slate-400">
-              R{initiativeRound}
+        <button
+          type="button"
+          onClick={() => handleSelectTab('initiative')}
+          title={
+            currentTurn
+              ? `Round ${initiativeRound} · Active Turn: ${currentTurn.characterName}`
+              : `Round ${initiativeRound} · Open Initiative Tracker`
+          }
+          className="gba-btn inline-flex items-center gap-1.5 px-2 py-1 text-[11px] bg-[#131A22] hover:bg-[#232F3E] text-[#F6C445] max-w-[165px] sm:max-w-[230px] cursor-pointer shrink-0"
+        >
+          <span className="font-mono tabular-nums font-bold text-[#090D12] bg-[#F6C445] px-1 leading-tight">
+            R{initiativeRound}
+          </span>
+          {currentTurn ? (
+            <span className="truncate text-slate-100">▶ {currentTurn.characterName}</span>
+          ) : (
+            <span className="hidden sm:inline text-slate-300">
+              Round {initiativeRound}
             </span>
-            <span>·</span>
-            <span className="truncate">▶ {currentTurn.characterName}</span>
-          </button>
-        )}
+          )}
+        </button>
       </div>
 
       {/* GBA Battle Dialogue Latest Roll Banner (when History tab is not open on < xl) */}

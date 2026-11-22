@@ -1,15 +1,22 @@
 import OBR from '@owlbear-rodeo/sdk';
-import { ObrState, RollEntry } from '../types/pokemon5e';
+import {
+  InitiativeEntry,
+  InitiativeSyncState,
+  ObrState,
+  RollEntry,
+} from '../types/pokemon5e';
 import { getRollCategoryLabel } from './pokemon5eRules';
 
 const ROLL_CHANNEL = 'com.pokemon5e.character-sheet/rolls';
 const DICE_PLUS_CHANNEL = 'dice-plus/roll-request';
 const ROOM_ROLLS_METADATA_KEY = 'com.pokemon5e.character-sheet/shared-rolls';
+const ROOM_INITIATIVE_METADATA_KEY = 'com.pokemon5e.character-sheet/initiative-state';
 
 export interface ObrBridgeCallbacks {
   onObrStateChange: (state: ObrState) => void;
   onRemoteRoll: (roll: RollEntry) => void;
   onSyncRoomRolls: (rolls: RollEntry[]) => void;
+  onSyncInitiative: (state: InitiativeSyncState) => void;
 }
 
 function extractRoomRolls(metadata: Record<string, unknown>, localPlayerId: string): RollEntry[] {
@@ -25,6 +32,49 @@ function extractRoomRolls(metadata: Record<string, unknown>, localPlayerId: stri
       ...item,
       source: item.ownerId === localPlayerId ? ('local' as const) : ('obr-remote' as const),
     }));
+}
+
+function extractRoomInitiative(metadata: Record<string, unknown>): InitiativeSyncState | null {
+  const raw = metadata[ROOM_INITIATIVE_METADATA_KEY];
+  if (!raw || typeof raw !== 'object') return null;
+
+  const candidate = raw as Partial<InitiativeSyncState>;
+  if (!Array.isArray(candidate.entries) || typeof candidate.updatedAt !== 'string') {
+    return null;
+  }
+
+  const visibleEntries = candidate.entries.filter(
+    (item): item is InitiativeEntry =>
+      Boolean(
+        item &&
+          typeof item === 'object' &&
+          typeof item.id === 'string' &&
+          typeof item.characterName === 'string' &&
+          typeof item.initiative === 'number' &&
+          item.visibility === 'visible'
+      )
+  );
+
+  const rawRound = typeof candidate.round === 'number' && Number.isFinite(candidate.round)
+    ? candidate.round
+    : 1;
+  const round = Math.max(1, Math.floor(rawRound));
+
+  const rawTurnIndex =
+    typeof candidate.turnIndex === 'number' && Number.isFinite(candidate.turnIndex)
+      ? Math.floor(candidate.turnIndex)
+      : 0;
+  const turnIndex =
+    visibleEntries.length > 0
+      ? Math.max(0, Math.min(rawTurnIndex, visibleEntries.length - 1))
+      : 0;
+
+  return {
+    entries: visibleEntries,
+    turnIndex,
+    round,
+    updatedAt: candidate.updatedAt,
+  };
 }
 
 export function initObrBridge(callbacks: ObrBridgeCallbacks): () => void {
@@ -76,6 +126,10 @@ export function initObrBridge(callbacks: ObrBridgeCallbacks): () => void {
       if (roomRolls.length > 0) {
         callbacks.onSyncRoomRolls(roomRolls);
       }
+      const roomInitiative = extractRoomInitiative(roomMeta);
+      if (roomInitiative) {
+        callbacks.onSyncInitiative(roomInitiative);
+      }
     } catch {
       // Ignore transient OBR readiness issues
     }
@@ -111,6 +165,10 @@ export function initObrBridge(callbacks: ObrBridgeCallbacks): () => void {
       if (roomRolls.length > 0) {
         callbacks.onSyncRoomRolls(roomRolls);
       }
+      const roomInitiative = extractRoomInitiative(metadata);
+      if (roomInitiative) {
+        callbacks.onSyncInitiative(roomInitiative);
+      }
     });
 
     unsubBroadcast = OBR.broadcast.onMessage(ROLL_CHANNEL, (event) => {
@@ -142,6 +200,40 @@ export function initObrBridge(callbacks: ObrBridgeCallbacks): () => void {
     unsubRoomMeta?.();
     unsubBroadcast?.();
   };
+}
+
+export async function syncInitiativeToObr(state: InitiativeSyncState): Promise<void> {
+  if (!OBR.isAvailable || !OBR.isReady) {
+    return;
+  }
+
+  // Never leak hidden GM initiative entries into shared room metadata
+  const visibleEntries = state.entries.filter((entry) => entry.visibility === 'visible');
+  const activeEntryId = state.entries[state.turnIndex]?.id;
+  const matchedVisibleIndex = activeEntryId
+    ? visibleEntries.findIndex((entry) => entry.id === activeEntryId)
+    : -1;
+  const visibleTurnIndex =
+    visibleEntries.length === 0
+      ? 0
+      : matchedVisibleIndex >= 0
+        ? matchedVisibleIndex
+        : Math.max(0, Math.min(state.turnIndex, visibleEntries.length - 1));
+
+  const payload: InitiativeSyncState = {
+    entries: visibleEntries,
+    turnIndex: visibleTurnIndex,
+    round: Math.max(1, Math.floor(state.round)),
+    updatedAt: state.updatedAt || new Date().toISOString(),
+  };
+
+  try {
+    await OBR.room.setMetadata({
+      [ROOM_INITIATIVE_METADATA_KEY]: payload,
+    });
+  } catch {
+    // Ignore room metadata write error if disconnected
+  }
 }
 
 export async function broadcastRollToObr(

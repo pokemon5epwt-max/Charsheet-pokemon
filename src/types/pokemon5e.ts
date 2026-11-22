@@ -195,6 +195,13 @@ export interface InitiativeEntry {
   updatedAt: string;
 }
 
+export interface InitiativeSyncState {
+  entries: InitiativeEntry[];
+  turnIndex: number;
+  round: number;
+  updatedAt: string;
+}
+
 export interface ObrState {
   isAvailable: boolean;
   isReady: boolean;
