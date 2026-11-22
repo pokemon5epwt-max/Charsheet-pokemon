@@ -1,4 +1,4 @@
-import { ListOrdered, ScrollText } from 'lucide-react';
+import { History, ListOrdered, ScrollText } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { AddPokemonModal } from './components/AddPokemonModal';
 import { CharacterSheet } from './components/CharacterSheet';
@@ -10,6 +10,7 @@ import { RollLogPanel } from './components/RollLogPanel';
 import { TopBar } from './components/TopBar';
 import { useCharacterStore } from './store/useCharacterStore';
 import { initObrBridge } from './utils/obrBridge';
+import { getRollCategoryLabel } from './utils/pokemon5eRules';
 
 export default function App() {
   const party = useCharacterStore((s) => s.party);
@@ -19,39 +20,47 @@ export default function App() {
   const initiativeRound = useCharacterStore((s) => s.initiativeRound);
   const setObrState = useCharacterStore((s) => s.setObrState);
   const appendRemoteRoll = useCharacterStore((s) => s.appendRemoteRoll);
+  const mergeRoomRolls = useCharacterStore((s) => s.mergeRoomRolls);
 
-  const [activeTab, setActiveTab] = useState<'sheet' | 'initiative'>('sheet');
+  const [activeTab, setActiveTab] = useState<'sheet' | 'initiative' | 'history'>('sheet');
   const [showImportModal, setShowImportModal] = useState(false);
   const [showAddPokemonModal, setShowAddPokemonModal] = useState(false);
-  const [showMobileLog, setShowMobileLog] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const latestRollId = rollLog[0]?.id;
   const prevLatestIdRef = useRef<string | undefined>(latestRollId);
 
-  // Initialize Owlbear Rodeo SDK bridge (gracefully falls back when outside OBR)
+  // Initialize Owlbear Rodeo SDK bridge (broadcast + persistent room metadata)
   useEffect(() => {
     const cleanup = initObrBridge({
       onObrStateChange: setObrState,
       onRemoteRoll: appendRemoteRoll,
+      onSyncRoomRolls: mergeRoomRolls,
     });
     return cleanup;
-  }, [setObrState, appendRemoteRoll]);
+  }, [setObrState, appendRemoteRoll, mergeRoomRolls]);
 
-  // Track unread rolls on viewports where the Roll Log drawer is collapsed
+  // Track unread rolls when History tab is not currently open on < xl viewports
   useEffect(() => {
-    if (latestRollId && latestRollId !== prevLatestIdRef.current && !showMobileLog) {
+    if (
+      latestRollId &&
+      latestRollId !== prevLatestIdRef.current &&
+      activeTab !== 'history'
+    ) {
       setUnreadCount((c) => c + 1);
     }
     prevLatestIdRef.current = latestRollId;
-  }, [latestRollId, showMobileLog]);
+  }, [latestRollId, activeTab]);
 
-  const handleToggleMobileLog = () => {
-    setShowMobileLog((prev) => {
-      const next = !prev;
-      if (next) setUnreadCount(0);
-      return next;
-    });
+  const handleSelectTab = (tab: 'sheet' | 'initiative' | 'history') => {
+    setActiveTab(tab);
+    if (tab === 'history') {
+      setUnreadCount(0);
+    }
+  };
+
+  const handleOpenHistoryFromTopBar = () => {
+    handleSelectTab(activeTab === 'history' ? 'sheet' : 'history');
   };
 
   const handleExportJson = () => {
@@ -76,18 +85,18 @@ export default function App() {
       <TopBar
         onOpenImport={() => setShowImportModal(true)}
         onExportJson={handleExportJson}
-        onToggleMobileLog={handleToggleMobileLog}
+        onToggleMobileLog={handleOpenHistoryFromTopBar}
         unreadLogCount={unreadCount}
       />
 
-      {/* GBA PokéNav Mode Switcher: Character Sheet vs Initiative Table */}
-      <div className="bg-[#18212B] border-b-2 border-[#090D12] px-3 sm:px-4 lg:px-6 flex items-center justify-between gap-3 shrink-0">
+      {/* GBA PokéNav Mode Switcher: Sheet | Initiative | History (< xl) */}
+      <div className="bg-[#18212B] border-b-2 border-[#090D12] px-3 sm:px-4 lg:px-6 flex items-center justify-between gap-2 shrink-0 overflow-x-auto">
         <div className="flex items-center gap-1 py-1" role="tablist" aria-label="Workspace View">
           <button
             type="button"
             role="tab"
             aria-selected={activeTab === 'sheet'}
-            onClick={() => setActiveTab('sheet')}
+            onClick={() => handleSelectTab('sheet')}
             className={`gba-btn inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium whitespace-nowrap shrink-0 cursor-pointer ${
               activeTab === 'sheet'
                 ? 'bg-[#283747] text-white'
@@ -106,7 +115,7 @@ export default function App() {
             type="button"
             role="tab"
             aria-selected={activeTab === 'initiative'}
-            onClick={() => setActiveTab('initiative')}
+            onClick={() => handleSelectTab('initiative')}
             className={`gba-btn inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium whitespace-nowrap shrink-0 cursor-pointer ${
               activeTab === 'initiative'
                 ? 'bg-[#283747] text-[#F6C445]'
@@ -123,13 +132,35 @@ export default function App() {
               ({initiativeList.length})
             </span>
           </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'history'}
+            onClick={() => handleSelectTab('history')}
+            className={`gba-btn xl:hidden inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium whitespace-nowrap shrink-0 cursor-pointer ${
+              activeTab === 'history'
+                ? 'bg-[#283747] text-[#38D46A]'
+                : 'bg-[#131A22] text-slate-400 hover:text-slate-100'
+            }`}
+          >
+            {activeTab === 'history' ? (
+              <PixelCursor className="w-2.5 h-2.5 text-[#38D46A]" />
+            ) : (
+              <History className="w-3.5 h-3.5" />
+            )}
+            <span>History</span>
+            <span className="font-mono tabular-nums text-[10px] text-slate-300">
+              ({rollLog.length})
+            </span>
+          </button>
         </div>
 
         {currentTurn && (
           <button
             type="button"
-            onClick={() => setActiveTab('initiative')}
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs text-[#F6C445] hover:text-amber-200 truncate max-w-[240px] cursor-pointer"
+            onClick={() => handleSelectTab('initiative')}
+            className="hidden sm:inline-flex items-center gap-1.5 text-xs text-[#F6C445] hover:text-amber-200 truncate max-w-[220px] cursor-pointer shrink-0"
           >
             <span className="font-mono tabular-nums text-[10px] text-slate-400">
               R{initiativeRound}
@@ -140,11 +171,11 @@ export default function App() {
         )}
       </div>
 
-      {/* GBA Battle Dialogue Roll Banner (only shown below xl when log drawer is closed) */}
-      {latestRoll && !showMobileLog && (
+      {/* GBA Battle Dialogue Latest Roll Banner (when History tab is not open on < xl) */}
+      {latestRoll && activeTab !== 'history' && (
         <button
           type="button"
-          onClick={handleToggleMobileLog}
+          onClick={() => handleSelectTab('history')}
           className={`xl:hidden px-3.5 py-1.5 border-b-2 border-[#090D12] flex items-center justify-between text-xs text-left cursor-pointer ${
             latestRoll.visibility === 'hidden'
               ? 'bg-[#2A1D3D]'
@@ -153,8 +184,12 @@ export default function App() {
         >
           <span className="truncate text-slate-200">
             {latestRoll.visibility === 'hidden' ? '[GM] ' : ''}
-            <strong className="text-white">{latestRoll.characterName}</strong> —{' '}
-            {latestRoll.label} ({latestRoll.breakdown})
+            <strong className="text-white">{latestRoll.characterName}</strong>
+            <span className="text-slate-400"> ({latestRoll.rollerName})</span> —{' '}
+            <span className="text-[#F6C445]">
+              {getRollCategoryLabel(latestRoll.category)}
+            </span>
+            : {latestRoll.label} ({latestRoll.breakdown})
           </span>
           <span
             className={`font-mono font-bold ml-3 shrink-0 text-xs ${
@@ -171,25 +206,28 @@ export default function App() {
         </button>
       )}
 
-      {/* Main Layout: Left Party Sidebar + Center Sheet/Initiative + Right Roll Log */}
+      {/* Main Layout: Left Party Sidebar + Center Sheet/Initiative/History + Right Docked Log */}
       <div className="flex-1 flex flex-col lg:flex-row min-h-0 overflow-hidden relative">
         <PartySidebar onOpenAddPokemon={() => setShowAddPokemonModal(true)} />
 
-        {activeTab === 'sheet' ? <CharacterSheet /> : <InitiativeTable />}
+        {activeTab === 'sheet' && <CharacterSheet />}
+        {activeTab === 'initiative' && <InitiativeTable />}
+        {activeTab === 'history' && (
+          <div className="xl:hidden flex-1 flex flex-col min-h-0">
+            <RollLogPanel isFullWidth />
+          </div>
+        )}
+        {/* On xl+ viewports, if someone somehow stays on 'history' after widening, show CharacterSheet in center */}
+        {activeTab === 'history' && (
+          <div className="hidden xl:flex flex-1 min-h-0">
+            <CharacterSheet />
+          </div>
+        )}
 
         {/* Desktop Docked Roll Log */}
         <div className="hidden xl:flex h-full">
           <RollLogPanel />
         </div>
-
-        {/* Tablet/Mobile Slide-Over Roll Log Drawer */}
-        {showMobileLog && (
-          <div className="xl:hidden fixed inset-0 z-40 bg-black/75 flex justify-end">
-            <div className="w-full max-w-sm h-full bg-[#18212B]">
-              <RollLogPanel onCloseMobile={() => setShowMobileLog(false)} />
-            </div>
-          </div>
-        )}
       </div>
 
       {showImportModal && (

@@ -5,10 +5,31 @@ import {
   PartyWorkspace,
   PokemonSheet,
   PokemonType,
+  RollCategory,
   SavingThrowProficiencies,
   SkillName,
   SkillProficiencies,
 } from '../types/pokemon5e';
+
+export function getRollCategoryLabel(category: RollCategory): string {
+  switch (category) {
+    case 'ability':
+      return 'Ability Check';
+    case 'save':
+      return 'Saving Throw';
+    case 'skill':
+      return 'Skill Check';
+    case 'attack':
+      return 'Move Attack';
+    case 'damage':
+      return 'Move Damage';
+    case 'initiative':
+      return 'Initiative';
+    case 'custom':
+    default:
+      return 'Custom Roll';
+  }
+}
 
 export const ABILITY_KEYS: AbilityKey[] = ['str', 'dex', 'con', 'int', 'wis', 'cha'];
 

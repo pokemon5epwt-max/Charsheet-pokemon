@@ -116,6 +116,7 @@ interface CharacterStoreState {
   rollVisibility: RollVisibility;
   diceIntegrationMode: DiceIntegrationMode;
   rollLog: RollEntry[];
+  rollLogClearedAt?: string;
   obrState: ObrState;
 
   // Initiative Tracker
@@ -156,6 +157,7 @@ interface CharacterStoreState {
     req: Omit<RollRequest, 'rollMode' | 'visibility' | 'rollerName' | 'ownerId'>
   ) => RollEntry;
   appendRemoteRoll: (roll: RollEntry) => void;
+  mergeRoomRolls: (rolls: RollEntry[]) => void;
   clearRollLog: () => void;
 
   // Initiative Actions
@@ -183,6 +185,7 @@ export const useCharacterStore = create<CharacterStoreState>()(
       rollVisibility: 'visible',
       diceIntegrationMode: 'internal',
       rollLog: [],
+      rollLogClearedAt: undefined,
       initiativeList: [],
       initiativeTurnIndex: 0,
       initiativeRound: 1,
@@ -449,7 +452,59 @@ export const useCharacterStore = create<CharacterStoreState>()(
           };
         }),
 
-      clearRollLog: () => set({ rollLog: [] }),
+      mergeRoomRolls: (incomingRolls) =>
+        set((state) => {
+          if (incomingRolls.length === 0) return state;
+          const existingIds = new Set(state.rollLog.map((r) => r.id));
+          const clearedMs = state.rollLogClearedAt
+            ? Date.parse(state.rollLogClearedAt)
+            : 0;
+
+          const unseen = incomingRolls.filter((r) => {
+            if (existingIds.has(r.id)) return false;
+            if (r.visibility !== 'visible') return false;
+            if (clearedMs > 0 && Date.parse(r.timestamp) <= clearedMs) return false;
+            return true;
+          });
+
+          if (unseen.length === 0) return state;
+
+          const combinedLog = [...unseen, ...state.rollLog]
+            .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp))
+            .slice(0, 60);
+
+          let nextInitState = {
+            party: state.party,
+            initiativeList: state.initiativeList,
+            initiativeTurnIndex: state.initiativeTurnIndex,
+          };
+
+          // Apply unseen initiative rolls chronologically so latest re-roll wins
+          const sortedAsc = [...unseen].sort(
+            (a, b) => Date.parse(a.timestamp) - Date.parse(b.timestamp)
+          );
+          for (const roll of sortedAsc) {
+            const patch = upsertInitiativeFromRoll(nextInitState, roll);
+            if (patch) {
+              nextInitState = {
+                ...nextInitState,
+                ...patch,
+              };
+            }
+          }
+
+          return {
+            rollLog: combinedLog,
+            initiativeList: nextInitState.initiativeList,
+            initiativeTurnIndex: nextInitState.initiativeTurnIndex,
+          };
+        }),
+
+      clearRollLog: () =>
+        set({
+          rollLog: [],
+          rollLogClearedAt: new Date().toISOString(),
+        }),
 
       addManualInitiative: ({ name, initiative, dexMod = 0, ac, hpText }) =>
         set((state) => {
@@ -569,6 +624,7 @@ export const useCharacterStore = create<CharacterStoreState>()(
         rollVisibility: state.rollVisibility,
         diceIntegrationMode: state.diceIntegrationMode,
         rollLog: state.rollLog.slice(0, 30),
+        rollLogClearedAt: state.rollLogClearedAt,
         initiativeList: state.initiativeList,
         initiativeTurnIndex: state.initiativeTurnIndex,
         initiativeRound: state.initiativeRound,

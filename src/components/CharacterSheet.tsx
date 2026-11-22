@@ -116,7 +116,7 @@ export function CharacterSheet() {
     performRoll({
       characterId: activeChar.id,
       characterName: activeChar.name,
-      label: `${ABILITY_LABELS[key].full} Check`,
+      label: `${ABILITY_LABELS[key].full} (${ABILITY_LABELS[key].short})`,
       category: 'ability',
       modifier: mod,
       modifierParts: [`${ABILITY_LABELS[key].short}(${formatSignedModifier(mod)})`],
@@ -138,7 +138,7 @@ export function CharacterSheet() {
     performRoll({
       characterId: activeChar.id,
       characterName: activeChar.name,
-      label: `${ABILITY_LABELS[key].short} Saving Throw`,
+      label: `${ABILITY_LABELS[key].full} (${ABILITY_LABELS[key].short})`,
       category: 'save',
       modifier: totalMod,
       modifierParts: parts,
@@ -165,7 +165,7 @@ export function CharacterSheet() {
     performRoll({
       characterId: activeChar.id,
       characterName: activeChar.name,
-      label: `${skill} Check`,
+      label: `${skill} (${ABILITY_LABELS[abilityKey].short})`,
       category: 'skill',
       modifier: totalMod,
       modifierParts: parts,
@@ -176,7 +176,7 @@ export function CharacterSheet() {
     performRoll({
       characterId: activeChar.id,
       characterName: activeChar.name,
-      label: 'Initiative',
+      label: 'Initiative (DEX)',
       category: 'initiative',
       modifier: initBonus,
       modifierParts: [`DEX(${formatSignedModifier(initBonus)})`],
@@ -195,7 +195,7 @@ export function CharacterSheet() {
     performRoll({
       characterId: activeChar.id,
       characterName: activeChar.name,
-      label: `${move.name} Attack`,
+      label: `${move.name} (${move.type})`,
       category: 'attack',
       modifier: atkBonus,
       modifierParts: [
@@ -219,7 +219,7 @@ export function CharacterSheet() {
     performRoll({
       characterId: activeChar.id,
       characterName: activeChar.name,
-      label: `${move.name} Damage`,
+      label: `${move.name} (${move.type})`,
       category: 'damage',
       diceExpression: move.damageDice || '1d6',
       modifier: totalBonus,
@@ -294,12 +294,12 @@ export function CharacterSheet() {
           {rollVisibility === 'hidden' ? (
             <>
               <EyeOff className="w-3 h-3" />
-              <span>Hidden (GM)</span>
+              <span>GM Only</span>
             </>
           ) : (
             <>
               <Eye className="w-3 h-3" />
-              <span>Visible Roll</span>
+              <span>All &amp; GM</span>
             </>
           )}
         </button>

@@ -33,6 +33,14 @@ export default defineConfig(() => {
         '@': path.resolve(__dirname, '.'),
       },
     },
+    build: {
+      rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'index.html'),
+          background: path.resolve(__dirname, 'background.html'),
+        },
+      },
+    },
     server: {
       cors: true,
       // HMR is disabled in AI Studio via DISABLE_HMR env var.
