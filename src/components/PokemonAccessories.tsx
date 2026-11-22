@@ -1,23 +1,47 @@
 export function PokedexLens({ className = 'w-7 h-7' }: { className?: string }) {
   return (
     <div className="inline-flex items-center gap-1.5 shrink-0" aria-hidden="true">
-      <svg viewBox="0 0 36 36" className={className} fill="none">
-        <circle cx="18" cy="18" r="16" fill="#1E293B" stroke="#E2E8F0" strokeWidth="2.2" />
-        <circle cx="18" cy="18" r="11.5" fill="url(#pokedex-lens-grad)" stroke="#0EA5E9" strokeWidth="1.2" />
-        <ellipse cx="14" cy="13.5" rx="4" ry="2.4" transform="rotate(-25 14 13.5)" fill="#E0F2FE" fillOpacity="0.85" />
-        <circle cx="22.5" cy="22.5" r="1.5" fill="#BAE6FD" fillOpacity="0.65" />
-        <defs>
-          <radialGradient id="pokedex-lens-grad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(14 13) rotate(50) scale(18)">
-            <stop stopColor="#38BDF8" />
-            <stop offset="0.6" stopColor="#0284C7" />
-            <stop offset="1" stopColor="#0C4A6E" />
-          </radialGradient>
-        </defs>
+      {/* 16x16 Pixel-Art Pokédex Cyan Sensor */}
+      <svg
+        viewBox="0 0 16 16"
+        className={`${className} pixel-art`}
+        shapeRendering="crispEdges"
+        fill="none"
+      >
+        {/* Outer White/Silver Pixel Ring */}
+        <rect x="4" y="1" width="8" height="1" fill="#090D12" />
+        <rect x="2" y="2" width="2" height="1" fill="#090D12" />
+        <rect x="12" y="2" width="2" height="1" fill="#090D12" />
+        <rect x="1" y="4" width="1" height="8" fill="#090D12" />
+        <rect x="14" y="4" width="1" height="8" fill="#090D12" />
+        <rect x="2" y="13" width="2" height="1" fill="#090D12" />
+        <rect x="12" y="13" width="2" height="1" fill="#090D12" />
+        <rect x="4" y="14" width="8" height="1" fill="#090D12" />
+
+        <rect x="4" y="2" width="8" height="12" fill="#E2E8F0" />
+        <rect x="2" y="4" width="12" height="8" fill="#E2E8F0" />
+        <rect x="3" y="3" width="10" height="10" fill="#E2E8F0" />
+
+        {/* Inner Dark Rim */}
+        <rect x="5" y="3" width="6" height="10" fill="#0F172A" />
+        <rect x="3" y="5" width="10" height="6" fill="#0F172A" />
+        <rect x="4" y="4" width="8" height="8" fill="#0F172A" />
+
+        {/* Cyan Lens Body */}
+        <rect x="5" y="4" width="6" height="8" fill="#0284C7" />
+        <rect x="4" y="5" width="8" height="6" fill="#0284C7" />
+        <rect x="5" y="5" width="5" height="5" fill="#38BDF8" />
+        {/* Specular Pixel Glint */}
+        <rect x="5" y="5" width="2" height="2" fill="#E0F2FE" />
+        <rect x="7" y="5" width="1" height="1" fill="#BAE6FD" />
+        <rect x="9" y="9" width="2" height="2" fill="#0369A1" />
       </svg>
+
+      {/* Classic GBA Pokédex Square Pixel LEDs */}
       <div className="hidden sm:flex items-center gap-1">
-        <span className="w-2 h-2 rounded-full bg-rose-500 border border-rose-300/40" />
-        <span className="w-2 h-2 rounded-full bg-amber-400 border border-amber-200/40" />
-        <span className="w-2 h-2 rounded-full bg-emerald-400 border border-emerald-200/40" />
+        <span className="w-2 h-2 bg-[#EF4444] border border-[#090D12]" />
+        <span className="w-2 h-2 bg-[#FACC15] border border-[#090D12]" />
+        <span className="w-2 h-2 bg-[#38D46A] border border-[#090D12]" />
       </div>
     </div>
   );
@@ -32,55 +56,91 @@ export function PokeballIcon({
   variant?: BallVariant;
   className?: string;
 }) {
-  const topColor =
+  const topMain =
     variant === 'great'
       ? '#2563EB'
       : variant === 'ultra'
-        ? '#1E293B'
+        ? '#27303D'
         : variant === 'fainted'
           ? '#475569'
-          : '#E11D48';
+          : '#E63946';
 
-  const bottomColor = variant === 'fainted' ? '#1E293B' : '#E2E8F0';
+  const topShade =
+    variant === 'great'
+      ? '#1D4ED8'
+      : variant === 'ultra'
+        ? '#181E27'
+        : variant === 'fainted'
+          ? '#334155'
+          : '#B91C1C';
+
+  const bottomMain = variant === 'fainted' ? '#334155' : '#F8FAFC';
+  const bottomShade = variant === 'fainted' ? '#1E293B' : '#CBD5E1';
 
   return (
-    <svg viewBox="0 0 32 32" className={className} fill="none" aria-hidden="true">
+    <svg
+      viewBox="0 0 16 16"
+      className={`${className} pixel-art`}
+      shapeRendering="crispEdges"
+      fill="none"
+      aria-hidden="true"
+    >
+      {/* Black Pixel Outline */}
+      <rect x="5" y="1" width="6" height="1" fill="#090D12" />
+      <rect x="3" y="2" width="2" height="1" fill="#090D12" />
+      <rect x="11" y="2" width="2" height="1" fill="#090D12" />
+      <rect x="2" y="3" width="1" height="2" fill="#090D12" />
+      <rect x="13" y="3" width="1" height="2" fill="#090D12" />
+      <rect x="1" y="5" width="1" height="6" fill="#090D12" />
+      <rect x="14" y="5" width="1" height="6" fill="#090D12" />
+      <rect x="2" y="11" width="1" height="2" fill="#090D12" />
+      <rect x="13" y="11" width="1" height="2" fill="#090D12" />
+      <rect x="3" y="13" width="2" height="1" fill="#090D12" />
+      <rect x="11" y="13" width="2" height="1" fill="#090D12" />
+      <rect x="5" y="14" width="6" height="1" fill="#090D12" />
+
       {/* Top Hemisphere */}
-      <path
-        d="M4 16C4 9.373 9.373 4 16 4C22.627 4 28 9.373 28 16H4Z"
-        fill={topColor}
-      />
-      {/* Great Ball Crimson Stripes */}
+      <rect x="5" y="2" width="6" height="1" fill={topMain} />
+      <rect x="3" y="3" width="10" height="2" fill={topMain} />
+      <rect x="2" y="5" width="12" height="2" fill={topMain} />
+      <rect x="11" y="5" width="3" height="2" fill={topShade} />
+      {/* Pixel Highlight */}
+      <rect x="4" y="3" width="2" height="2" fill="#FFFFFF" fillOpacity="0.35" />
+
+      {/* Great Ball Red Stripes */}
       {variant === 'great' && (
         <>
-          <path d="M7.5 8.5L11.5 12.5" stroke="#EF4444" strokeWidth="2.4" strokeLinecap="round" />
-          <path d="M24.5 8.5L20.5 12.5" stroke="#EF4444" strokeWidth="2.4" strokeLinecap="round" />
+          <rect x="3" y="4" width="2" height="2" fill="#EF4444" />
+          <rect x="11" y="4" width="2" height="2" fill="#EF4444" />
         </>
       )}
-      {/* Ultra Ball Gold Arc */}
+
+      {/* Ultra Ball Gold H-Stripe */}
       {variant === 'ultra' && (
-        <path
-          d="M9 7.5C11 6 13.4 5.2 16 5.2C18.6 5.2 21 6 23 7.5"
-          stroke="#FACC15"
-          strokeWidth="2.4"
-          strokeLinecap="round"
-        />
+        <>
+          <rect x="5" y="2" width="6" height="1" fill="#FACC15" />
+          <rect x="4" y="3" width="2" height="3" fill="#FACC15" />
+          <rect x="10" y="3" width="2" height="3" fill="#FACC15" />
+        </>
       )}
+
+      {/* Center Black Band */}
+      <rect x="2" y="7" width="12" height="2" fill="#090D12" />
+
       {/* Bottom Hemisphere */}
-      <path
-        d="M4 16H28C28 22.627 22.627 28 16 28C9.373 28 4 22.627 4 16Z"
-        fill={bottomColor}
-      />
-      {/* Outer Rim & Center Band */}
-      <circle cx="16" cy="16" r="12" stroke="#0F1117" strokeWidth="2" />
-      <path d="M4 16H28" stroke="#0F1117" strokeWidth="2.4" />
+      <rect x="2" y="9" width="12" height="2" fill={bottomMain} />
+      <rect x="3" y="11" width="10" height="2" fill={bottomMain} />
+      <rect x="5" y="13" width="6" height="1" fill={bottomShade} />
+      <rect x="11" y="11" width="2" height="2" fill={bottomShade} />
+
       {/* Center Button */}
-      <circle cx="16" cy="16" r="4" fill="#0F1117" />
-      <circle
-        cx="16"
-        cy="16"
-        r="2.2"
-        fill={variant === 'fainted' ? '#64748B' : '#F8FAFC'}
+      <rect x="6" y="6" width="4" height="4" fill="#090D12" />
+      <rect
+        x="7"
+        y="7"
+        width="2"
+        height="2"
+        fill={variant === 'fainted' ? '#64748B' : '#FFFFFF'}
       />
     </svg>
   );
@@ -88,38 +148,74 @@ export function PokeballIcon({
 
 export function LeagueBadgeIcon({ className = 'w-4 h-4' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
-      <path
-        d="M12 2L19 6.5V15.5L12 22L5 15.5V6.5L12 2Z"
-        fill="#F59E0B"
-        fillOpacity="0.2"
-        stroke="#FBBF24"
-        strokeWidth="1.8"
-      />
-      <path
-        d="M12 6.5L15.5 9.5V14L12 17.5L8.5 14V9.5L12 6.5Z"
-        fill="#FBBF24"
-      />
+    <svg
+      viewBox="0 0 12 12"
+      className={`${className} pixel-art`}
+      shapeRendering="crispEdges"
+      fill="none"
+      aria-hidden="true"
+    >
+      <rect x="5" y="1" width="2" height="1" fill="#FDE047" />
+      <rect x="3" y="2" width="6" height="2" fill="#FACC15" />
+      <rect x="2" y="4" width="8" height="4" fill="#EAB308" />
+      <rect x="4" y="4" width="4" height="4" fill="#FEF08A" />
+      <rect x="3" y="8" width="6" height="2" fill="#CA8A04" />
+      <rect x="5" y="10" width="2" height="1" fill="#A16207" />
+    </svg>
+  );
+}
+
+export function PixelCursor({ className = 'w-2.5 h-2.5' }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 8 8"
+      className={`${className} pixel-art shrink-0`}
+      shapeRendering="crispEdges"
+      fill="none"
+      aria-hidden="true"
+    >
+      <rect x="1" y="1" width="2" height="6" fill="currentColor" />
+      <rect x="3" y="2" width="2" height="4" fill="currentColor" />
+      <rect x="5" y="3" width="2" height="2" fill="currentColor" />
     </svg>
   );
 }
 
 export function PokeballBackdrop({
-  colorHex = '#E11D48',
+  colorHex = '#E63946',
 }: {
   colorHex?: string;
 }) {
   return (
     <svg
-      viewBox="0 0 180 180"
-      className="w-40 h-40 pointer-events-none select-none opacity-[0.09]"
+      viewBox="0 0 24 24"
+      className="w-36 h-36 pointer-events-none select-none opacity-[0.11] pixel-art"
+      shapeRendering="crispEdges"
       fill="none"
       aria-hidden="true"
     >
-      <circle cx="90" cy="90" r="76" stroke={colorHex} strokeWidth="6" />
-      <path d="M14 90H64M116 90H166" stroke={colorHex} strokeWidth="6" strokeLinecap="round" />
-      <circle cx="90" cy="90" r="24" stroke={colorHex} strokeWidth="6" />
-      <circle cx="90" cy="90" r="10" fill={colorHex} />
+      {/* Stepped Pixel Pokéball Watermark Silhouette */}
+      <rect x="8" y="2" width="8" height="2" fill={colorHex} />
+      <rect x="5" y="4" width="3" height="2" fill={colorHex} />
+      <rect x="16" y="4" width="3" height="2" fill={colorHex} />
+      <rect x="3" y="6" width="2" height="3" fill={colorHex} />
+      <rect x="19" y="6" width="2" height="3" fill={colorHex} />
+      <rect x="2" y="9" width="2" height="6" fill={colorHex} />
+      <rect x="20" y="9" width="2" height="6" fill={colorHex} />
+      <rect x="3" y="15" width="2" height="3" fill={colorHex} />
+      <rect x="19" y="15" width="2" height="3" fill={colorHex} />
+      <rect x="5" y="18" width="3" height="2" fill={colorHex} />
+      <rect x="16" y="18" width="3" height="2" fill={colorHex} />
+      <rect x="8" y="20" width="8" height="2" fill={colorHex} />
+      {/* Center Band */}
+      <rect x="4" y="11" width="5" height="2" fill={colorHex} />
+      <rect x="15" y="11" width="5" height="2" fill={colorHex} />
+      {/* Center Ring */}
+      <rect x="10" y="9" width="4" height="1" fill={colorHex} />
+      <rect x="9" y="10" width="1" height="4" fill={colorHex} />
+      <rect x="14" y="10" width="1" height="4" fill={colorHex} />
+      <rect x="10" y="14" width="4" height="1" fill={colorHex} />
+      <rect x="11" y="11" width="2" height="2" fill={colorHex} />
     </svg>
   );
 }

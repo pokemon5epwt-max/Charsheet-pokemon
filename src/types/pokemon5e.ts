@@ -175,7 +175,24 @@ export interface RollEntry {
   isCrit: boolean;
   isFumble: boolean;
   moveType?: PokemonType;
+  dexMod?: number;
   source: 'local' | 'obr-remote';
+}
+
+export interface InitiativeEntry {
+  id: string;
+  characterId: string;
+  characterName: string;
+  playerName: string;
+  ownerId: string;
+  initiative: number;
+  dexMod: number;
+  breakdown: string;
+  visibility: RollVisibility;
+  hpText?: string;
+  ac?: number;
+  isNpc?: boolean;
+  updatedAt: string;
 }
 
 export interface ObrState {

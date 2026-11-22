@@ -28,14 +28,14 @@ export function TopBar({
   };
 
   return (
-    <header className="h-12 border-b border-rose-500/25 bg-gradient-to-r from-[#1A1320] via-[#141722] to-[#13161F] px-3 sm:px-4 lg:px-6 flex items-center justify-between gap-2 shrink-0">
+    <header className="h-12 border-b-2 border-[#090D12] bg-[#9E1E2A] shadow-[inset_0_2px_0_#D84A57,inset_0_-2px_0_#6B111A] px-3 sm:px-4 lg:px-6 flex items-center justify-between gap-2 shrink-0">
       <div className="flex items-center gap-2.5 min-w-0">
         <PokedexLens className="w-6 h-6" />
-        <span className="font-display text-sm sm:text-base font-semibold tracking-tight text-slate-100 whitespace-nowrap shrink-0">
-          Pokémon 5e
+        <span className="font-display text-xs sm:text-sm font-bold tracking-tight text-white drop-shadow-[1px_1px_0_#090D12] whitespace-nowrap shrink-0">
+          POKÉMON 5E
         </span>
         {obrState.isAvailable && (
-          <span className="hidden sm:inline text-xs text-slate-400 truncate max-w-[140px]">
+          <span className="hidden sm:inline text-xs text-rose-100/85 truncate max-w-[130px]">
             · {obrState.playerName}
           </span>
         )}
@@ -45,9 +45,9 @@ export function TopBar({
         <button
           type="button"
           onClick={onOpenImport}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-slate-200 hover:text-white bg-[#1C202B] hover:bg-[#242938] border border-[#2C3346] rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+          className="gba-btn inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium text-slate-100 bg-[#1E2833] hover:bg-[#2A3746] whitespace-nowrap shrink-0 cursor-pointer"
         >
-          <FileUp className="w-3.5 h-3.5 text-rose-400" />
+          <FileUp className="w-3.5 h-3.5 text-[#F6C445]" />
           <span>Import</span>
         </button>
 
@@ -55,7 +55,7 @@ export function TopBar({
           type="button"
           onClick={onExportJson}
           title="Export Party JSON"
-          className="inline-flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-[#1C202B] rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+          className="gba-btn inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-100 bg-[#1E2833] hover:bg-[#2A3746] whitespace-nowrap shrink-0 cursor-pointer"
         >
           <Download className="w-3.5 h-3.5" />
           <span className="hidden md:inline">Export</span>
@@ -65,7 +65,7 @@ export function TopBar({
           type="button"
           onClick={resetToStarterParty}
           title="Load sample Trainer & Pokémon party"
-          className="hidden md:inline-flex items-center gap-1.5 px-2 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 hover:bg-[#1C202B] rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+          className="gba-btn hidden md:inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-200 bg-[#1E2833] hover:bg-[#2A3746] whitespace-nowrap shrink-0 cursor-pointer"
         >
           <RotateCcw className="w-3.5 h-3.5" />
           <span>Sample</span>
@@ -76,7 +76,7 @@ export function TopBar({
             type="button"
             onClick={handleToggleObrSize}
             title={isExpandedObr ? 'Shrink to Medium Popover (540×640)' : 'Expand Popover'}
-            className="inline-flex items-center justify-center p-1.5 text-slate-300 hover:text-white bg-[#1C202B] hover:bg-[#242938] border border-[#2C3346] rounded-md transition-colors shrink-0 cursor-pointer"
+            className="gba-btn inline-flex items-center justify-center p-1.5 text-slate-100 bg-[#1E2833] hover:bg-[#2A3746] shrink-0 cursor-pointer"
           >
             {isExpandedObr ? (
               <Minimize2 className="w-3.5 h-3.5" />
@@ -89,12 +89,12 @@ export function TopBar({
         <button
           type="button"
           onClick={onToggleMobileLog}
-          className="xl:hidden inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-medium text-white bg-rose-600 hover:bg-rose-500 rounded-md transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+          className="gba-btn xl:hidden inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-[#090D12] bg-[#F6C445] hover:bg-[#FBD160] whitespace-nowrap shrink-0 cursor-pointer"
         >
           <History className="w-3.5 h-3.5" />
           <span>Log</span>
           {unreadLogCount > 0 && (
-            <span className="font-mono text-[11px] opacity-90">({unreadLogCount})</span>
+            <span className="font-mono text-[10px]">({unreadLogCount})</span>
           )}
         </button>
       </nav>

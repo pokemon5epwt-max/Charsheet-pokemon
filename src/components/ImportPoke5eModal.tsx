@@ -141,54 +141,53 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 bg-black/75 flex items-center justify-center p-4"
+      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-labelledby="import-modal-title"
     >
-      <div className="w-full max-w-2xl bg-[#161A24] border border-[#2C3346] rounded-xl overflow-hidden flex flex-col max-h-[90vh]">
+      <div className="gba-panel w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
-        <div className="px-5 py-4 border-b border-[#252A38] flex items-center justify-between">
+        <div className="px-5 py-3.5 bg-[#9E1E2A] border-b-2 border-[#090D12] flex items-center justify-between">
           <div>
             <h2
               id="import-modal-title"
-              className="font-display text-base font-semibold text-slate-100"
+              className="font-display text-sm font-bold text-white uppercase"
             >
               Import from poke5e.app
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
-              Import directly via poke5e.app Trainer Link, .poke5e backup file, JSON, or statblock
+            <p className="text-xs text-rose-100/85 mt-0.5">
+              Trainer Link, .poke5e backup file, JSON, or statblock
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close Import Modal"
-            className="p-1.5 text-slate-400 hover:text-white rounded-md hover:bg-[#252A38] cursor-pointer"
+            className="gba-btn p-1.5 bg-[#1E2833] hover:bg-[#2A3746] text-slate-200 cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Documentation Banner */}
-        <div className="px-5 py-3 bg-[#12151E] border-b border-[#252A38] flex items-start gap-2.5 text-xs text-slate-300">
-          <Info className="w-4 h-4 text-sky-400 shrink-0 mt-0.5" />
+        <div className="px-5 py-3 bg-[#131A22] border-b-2 border-[#090D12] flex items-start gap-2.5 text-xs text-slate-200">
+          <Info className="w-4 h-4 text-[#38BDF8] shrink-0 mt-0.5" />
           <p className="leading-relaxed">
             <strong>Import via Link:</strong> Paste your Trainer share URL from{' '}
-            <code className="font-mono text-rose-300">poke5e.app/trainers?id=...</code> (or just the
-            Trainer ID). The sheet fetches your Trainer stats, Pokémon party (up to 6), skills,
-            and moves directly from poke5e.app.
+            <code className="font-mono text-[#F6C445]">poke5e.app/trainers?id=...</code> (or just
+            the Trainer ID) to fetch stats, Pokémon party, skills, and moves directly.
           </p>
         </div>
 
         {/* Tabs */}
-        <div className="px-5 pt-3 border-b border-[#252A38] flex items-center gap-2 overflow-x-auto">
+        <div className="px-5 py-2 bg-[#17202A] border-b-2 border-[#090D12] flex items-center gap-1.5 overflow-x-auto">
           {(
             [
               { id: 'link', label: '1. Link poke5e' },
-              { id: 'file', label: '2. File .poke5e / JSON' },
+              { id: 'file', label: '2. File .poke5e' },
               { id: 'paste-json', label: '3. Paste JSON' },
-              { id: 'quick-map', label: '4. Quick Statblock' },
+              { id: 'quick-map', label: '4. Statblock' },
             ] as const
           ).map((t) => (
             <button
@@ -198,10 +197,10 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
                 setTab(t.id);
                 setStatus(null);
               }}
-              className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors cursor-pointer whitespace-nowrap shrink-0 ${
+              className={`gba-btn px-3 py-1.5 text-xs font-semibold cursor-pointer whitespace-nowrap shrink-0 ${
                 tab === t.id
-                  ? 'border-rose-500 text-white'
-                  : 'border-transparent text-slate-400 hover:text-slate-200'
+                  ? 'bg-[#D62839] text-white'
+                  : 'bg-[#131A22] text-slate-300 hover:text-white'
               }`}
             >
               {t.label}
@@ -216,13 +215,13 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
               <div>
                 <label
                   htmlFor="poke5e-link-input"
-                  className="block text-xs font-medium text-slate-300 mb-1.5"
+                  className="block text-xs font-medium text-slate-200 mb-1.5"
                 >
                   Link Trainer poke5e.app atau Trainer ID
                 </label>
                 <div className="flex flex-col sm:flex-row gap-2">
                   <div className="relative flex-1">
-                    <Link2 className="w-4 h-4 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Link2 className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       id="poke5e-link-input"
                       type="text"
@@ -230,13 +229,13 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
                       value={linkInput}
                       onChange={(e) => setLinkInput(e.target.value)}
                       placeholder="https://poke5e.app/trainers?id=..."
-                      className="w-full pl-9 pr-3 py-2 text-xs font-mono bg-[#0F1117] border border-[#2A3042] rounded-md text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-rose-500/60"
+                      className="gba-well w-full pl-9 pr-3 py-2 text-xs font-mono text-white placeholder:text-slate-500 focus:outline-none"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={isLoading || !linkInput.trim()}
-                    className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-medium text-white bg-rose-600 hover:bg-rose-500 disabled:opacity-50 rounded-md transition-colors cursor-pointer shrink-0"
+                    className="gba-btn inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-white bg-[#D62839] hover:bg-[#E63946] disabled:opacity-50 cursor-pointer shrink-0"
                   >
                     {isLoading ? (
                       <>
@@ -248,9 +247,9 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
                     )}
                   </button>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-2">
-                  Contoh: buka Trainer kamu di poke5e.app, salin URL dari address bar browser (misal{' '}
-                  <code className="font-mono text-slate-400">
+                <p className="text-xs text-slate-400 mt-2">
+                  Contoh: salin URL Trainer dari browser (misal{' '}
+                  <code className="font-mono text-slate-300">
                     https://poke5e.app/trainers?id=abc123...
                   </code>
                   ), lalu tempel di sini.
@@ -261,13 +260,13 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
 
           {tab === 'file' && (
             <div className="space-y-4">
-              <label className="flex flex-col items-center justify-center gap-2 p-8 border border-dashed border-[#364059] hover:border-rose-500/60 rounded-lg bg-[#11141C] cursor-pointer transition-colors">
-                <FileUp className="w-7 h-7 text-rose-400" />
-                <span className="text-sm font-medium text-slate-200">
+              <label className="gba-well flex flex-col items-center justify-center gap-2 p-8 cursor-pointer hover:bg-[#161F29] transition-colors">
+                <FileUp className="w-7 h-7 text-[#F6C445]" />
+                <span className="text-sm font-medium text-white">
                   {isLoading ? 'Reading backup file...' : 'Choose .poke5e or .json file'}
                 </span>
-                <span className="text-xs text-slate-500">
-                  Extracts Trainer keys and fetches full stats from poke5e.app automatically
+                <span className="text-xs text-slate-400">
+                  Extracts Trainer keys and fetches full stats from poke5e.app
                 </span>
                 <input
                   type="file"
@@ -278,15 +277,15 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
               </label>
 
               {extractedKeys.length > 0 && (
-                <div className="p-3.5 bg-[#12151E] border border-[#2A3042] rounded-lg space-y-2">
-                  <div className="text-xs font-semibold text-slate-200">
+                <div className="gba-well p-3.5 space-y-2">
+                  <div className="text-xs font-semibold text-white">
                     Extracted poke5e.app Keys ({extractedKeys.length})
                   </div>
                   <div className="space-y-1.5">
                     {extractedKeys.map((entry, idx) => (
                       <div
                         key={idx}
-                        className="text-xs font-mono text-slate-300 bg-[#0F1117] px-2.5 py-1.5 rounded border border-[#252A38] flex flex-wrap items-center justify-between gap-2"
+                        className="text-xs font-mono text-slate-200 bg-[#18212B] px-2.5 py-1.5 border border-[#090D12] flex flex-wrap items-center justify-between gap-2"
                       >
                         <div className="flex flex-wrap gap-3">
                           {entry.name && <span>Name: {entry.name}</span>}
@@ -301,7 +300,7 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
                               setLinkInput(k);
                               setTab('link');
                             }}
-                            className="text-[11px] font-sans font-medium text-rose-400 hover:text-rose-300 cursor-pointer"
+                            className="text-xs font-sans font-semibold text-[#F6C445] hover:text-amber-200 cursor-pointer"
                           >
                             Fetch via Link →
                           </button>
@@ -316,22 +315,21 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
 
           {tab === 'paste-json' && (
             <div className="space-y-3">
-              <p className="text-xs text-slate-400">
-                Paste a full Trainer JSON document (either exported from this sheet or copied from
-                poke5e.app storage).
+              <p className="text-xs text-slate-300">
+                Paste a full Trainer JSON document exported from this sheet or poke5e.app.
               </p>
               <textarea
                 rows={8}
                 value={jsonText}
                 onChange={(e) => setJsonText(e.target.value)}
                 placeholder='{ "trainer": { "name": "Red", ... }, "pokemon": [ ... ] }'
-                className="w-full p-3 text-xs font-mono bg-[#0F1117] border border-[#2A3042] rounded-lg text-slate-100 focus:outline-none focus:border-rose-500/60"
+                className="gba-well w-full p-3 text-xs font-mono text-white focus:outline-none"
               />
               <div className="flex justify-end">
                 <button
                   type="button"
                   onClick={handlePasteJsonImport}
-                  className="px-4 py-2 text-xs font-medium text-white bg-rose-600 hover:bg-rose-500 rounded-md cursor-pointer"
+                  className="gba-btn px-4 py-2 text-xs font-semibold text-white bg-[#D62839] hover:bg-[#E63946] cursor-pointer"
                 >
                   Import JSON Workspace
                 </button>
@@ -343,7 +341,7 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
             <div className="space-y-3">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">
+                  <label className="block text-xs text-slate-300 mb-1">
                     Trainer Name (optional update)
                   </label>
                   <input
@@ -351,21 +349,20 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
                     value={trainerNameInput}
                     onChange={(e) => setTrainerNameInput(e.target.value)}
                     placeholder="Keep current trainer or enter name"
-                    className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                    className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs text-slate-400 mb-1">
-                  Paste Pokémon Text / Statblock (extracts Level, HP, AC, Ability Scores, Skills &
-                  Moves)
+                <label className="block text-xs text-slate-300 mb-1">
+                  Paste Pokémon Text / Statblock
                 </label>
                 <textarea
                   rows={8}
                   value={statblockText}
                   onChange={(e) => setStatblockText(e.target.value)}
-                  className="w-full p-3 text-xs font-mono bg-[#0F1117] border border-[#2A3042] rounded-lg text-slate-100 focus:outline-none focus:border-rose-500/60"
+                  className="gba-well w-full p-3 text-xs font-mono text-white focus:outline-none"
                 />
               </div>
 
@@ -373,9 +370,9 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
                 <button
                   type="button"
                   onClick={handleQuickMapPokemon}
-                  className="px-4 py-2 text-xs font-medium text-white bg-rose-600 hover:bg-rose-500 rounded-md cursor-pointer"
+                  className="gba-btn px-4 py-2 text-xs font-semibold text-white bg-[#D62839] hover:bg-[#E63946] cursor-pointer"
                 >
-                  Parse & Add Pokémon to Party
+                  Parse &amp; Add Pokémon
                 </button>
               </div>
             </div>
@@ -383,21 +380,21 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
 
           {status && (
             <div
-              className={`p-3.5 rounded-lg border flex items-start gap-2.5 text-xs ${
+              className={`p-3.5 border-2 border-[#090D12] flex items-start gap-2.5 text-xs ${
                 status.success
-                  ? 'bg-emerald-500/10 border-emerald-500/35 text-emerald-200'
-                  : 'bg-amber-500/10 border-amber-500/35 text-amber-200'
+                  ? 'bg-[#1A4D34] text-emerald-100'
+                  : 'bg-[#5A3A15] text-amber-100'
               }`}
             >
               {status.success ? (
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 text-[#38D46A] shrink-0 mt-0.5" />
               ) : (
-                <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+                <AlertCircle className="w-4 h-4 text-[#F6C445] shrink-0 mt-0.5" />
               )}
               <div className="space-y-1">
-                <p className="font-medium">{status.message}</p>
+                <p className="font-semibold">{status.message}</p>
                 {status.warnings.map((w, i) => (
-                  <p key={i} className="text-slate-300">
+                  <p key={i} className="text-slate-200">
                     {w}
                   </p>
                 ))}
@@ -407,11 +404,11 @@ export function ImportPoke5eModal({ onClose }: ImportPoke5eModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-3 border-t border-[#252A38] flex justify-end">
+        <div className="px-5 py-3 border-t-2 border-[#090D12] bg-[#17202A] flex justify-end">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-1.5 text-xs font-medium text-slate-200 bg-[#1C202B] hover:bg-[#252A38] border border-[#2A3042] rounded-md cursor-pointer"
+            className="gba-btn px-4 py-1.5 text-xs font-semibold text-slate-100 bg-[#263547] hover:bg-[#32445A] cursor-pointer"
           >
             Close
           </button>

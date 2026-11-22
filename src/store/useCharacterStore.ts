@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import {
   ActiveCharacter,
   DiceIntegrationMode,
+  InitiativeEntry,
   Move,
   ObrState,
   PartyWorkspace,
@@ -21,6 +22,93 @@ import {
   createStarterParty,
 } from '../utils/pokemon5eRules';
 
+function sortInitiativeEntries(entries: InitiativeEntry[]): InitiativeEntry[] {
+  return [...entries].sort((a, b) => {
+    if (b.initiative !== a.initiative) return b.initiative - a.initiative;
+    if (b.dexMod !== a.dexMod) return b.dexMod - a.dexMod;
+    return a.characterName.localeCompare(b.characterName);
+  });
+}
+
+function getNextTurnIndexAfterReorder(
+  prevList: InitiativeEntry[],
+  prevIndex: number,
+  nextList: InitiativeEntry[]
+): number {
+  if (nextList.length === 0) return 0;
+  const currentActiveId = prevList[prevIndex]?.id;
+  if (currentActiveId) {
+    const relocated = nextList.findIndex((item) => item.id === currentActiveId);
+    if (relocated >= 0) return relocated;
+  }
+  return Math.max(0, Math.min(prevIndex, nextList.length - 1));
+}
+
+function upsertInitiativeFromRoll(
+  state: {
+    party: PartyWorkspace;
+    initiativeList: InitiativeEntry[];
+    initiativeTurnIndex: number;
+  },
+  roll: RollEntry
+): { initiativeList: InitiativeEntry[]; initiativeTurnIndex: number } | null {
+  if (roll.category !== 'initiative') return null;
+
+  const entryId = `${roll.ownerId || 'local-player'}::${roll.characterId || roll.characterName}`;
+  const dexMod =
+    typeof roll.dexMod === 'number'
+      ? roll.dexMod
+      : typeof roll.selectedDie === 'number'
+        ? roll.total - roll.selectedDie
+        : 0;
+
+  let hpText: string | undefined;
+  let ac: number | undefined;
+  if (roll.source === 'local') {
+    const matched =
+      roll.characterId === 'trainer'
+        ? state.party.trainer
+        : state.party.pokemon.find((p) => p.id === roll.characterId);
+    if (matched) {
+      hpText = `${matched.hpCurrent}/${matched.hpMax}`;
+      ac = matched.ac;
+    }
+  } else {
+    const existing = state.initiativeList.find((e) => e.id === entryId);
+    hpText = existing?.hpText;
+    ac = existing?.ac;
+  }
+
+  const nextEntry: InitiativeEntry = {
+    id: entryId,
+    characterId: roll.characterId,
+    characterName: roll.characterName,
+    playerName: roll.rollerName || 'Player',
+    ownerId: roll.ownerId || 'local-player',
+    initiative: roll.total,
+    dexMod,
+    breakdown: roll.breakdown,
+    visibility: roll.visibility,
+    hpText,
+    ac,
+    isNpc: false,
+    updatedAt: roll.timestamp,
+  };
+
+  const withoutExisting = state.initiativeList.filter((e) => e.id !== entryId);
+  const sorted = sortInitiativeEntries([...withoutExisting, nextEntry]);
+  const nextIndex = getNextTurnIndexAfterReorder(
+    state.initiativeList,
+    state.initiativeTurnIndex,
+    sorted
+  );
+
+  return {
+    initiativeList: sorted,
+    initiativeTurnIndex: nextIndex,
+  };
+}
+
 interface CharacterStoreState {
   party: PartyWorkspace;
   activeCharacterId: 'trainer' | string;
@@ -29,6 +117,11 @@ interface CharacterStoreState {
   diceIntegrationMode: DiceIntegrationMode;
   rollLog: RollEntry[];
   obrState: ObrState;
+
+  // Initiative Tracker
+  initiativeList: InitiativeEntry[];
+  initiativeTurnIndex: number;
+  initiativeRound: number;
 
   // Selection & Controls
   setActiveCharacter: (id: 'trainer' | string) => void;
@@ -64,6 +157,21 @@ interface CharacterStoreState {
   ) => RollEntry;
   appendRemoteRoll: (roll: RollEntry) => void;
   clearRollLog: () => void;
+
+  // Initiative Actions
+  addManualInitiative: (input: {
+    name: string;
+    initiative: number;
+    dexMod?: number;
+    ac?: number;
+    hpText?: string;
+  }) => void;
+  updateInitiativeScore: (id: string, initiative: number) => void;
+  removeInitiativeEntry: (id: string) => void;
+  setInitiativeTurnIndex: (index: number) => void;
+  nextInitiativeTurn: () => void;
+  prevInitiativeTurn: () => void;
+  clearInitiative: () => void;
 }
 
 export const useCharacterStore = create<CharacterStoreState>()(
@@ -75,6 +183,9 @@ export const useCharacterStore = create<CharacterStoreState>()(
       rollVisibility: 'visible',
       diceIntegrationMode: 'internal',
       rollLog: [],
+      initiativeList: [],
+      initiativeTurnIndex: 0,
+      initiativeRound: 1,
       obrState: {
         isAvailable: false,
         isReady: false,
@@ -309,9 +420,13 @@ export const useCharacterStore = create<CharacterStoreState>()(
           ownerId: obrState.playerId || 'local-player',
         });
 
-        set((state) => ({
-          rollLog: [entry, ...state.rollLog].slice(0, 60),
-        }));
+        set((state) => {
+          const initiativePatch = upsertInitiativeFromRoll(state, entry);
+          return {
+            rollLog: [entry, ...state.rollLog].slice(0, 60),
+            ...(initiativePatch ?? {}),
+          };
+        });
 
         void broadcastRollToObr(entry, diceIntegrationMode === 'obr-dice-plus');
         return entry;
@@ -320,12 +435,130 @@ export const useCharacterStore = create<CharacterStoreState>()(
       appendRemoteRoll: (roll) =>
         set((state) => {
           if (state.rollLog.some((r) => r.id === roll.id)) return state;
+          if (
+            roll.visibility === 'hidden' &&
+            state.obrState.role !== 'GM' &&
+            roll.ownerId !== state.obrState.playerId
+          ) {
+            return state;
+          }
+          const initiativePatch = upsertInitiativeFromRoll(state, roll);
           return {
             rollLog: [roll, ...state.rollLog].slice(0, 60),
+            ...(initiativePatch ?? {}),
           };
         }),
 
       clearRollLog: () => set({ rollLog: [] }),
+
+      addManualInitiative: ({ name, initiative, dexMod = 0, ac, hpText }) =>
+        set((state) => {
+          const trimmed = name.trim();
+          if (!trimmed) return state;
+          const id = createId('npc-init');
+          const entry: InitiativeEntry = {
+            id,
+            characterId: id,
+            characterName: trimmed,
+            playerName: state.obrState.role === 'GM' ? 'GM / NPC' : state.obrState.playerName,
+            ownerId: state.obrState.playerId || 'local-player',
+            initiative,
+            dexMod,
+            breakdown: 'Manual entry',
+            visibility: 'visible',
+            ac,
+            hpText: hpText?.trim() || undefined,
+            isNpc: true,
+            updatedAt: new Date().toISOString(),
+          };
+          const sorted = sortInitiativeEntries([...state.initiativeList, entry]);
+          const nextIndex = getNextTurnIndexAfterReorder(
+            state.initiativeList,
+            state.initiativeTurnIndex,
+            sorted
+          );
+          return {
+            initiativeList: sorted,
+            initiativeTurnIndex: nextIndex,
+          };
+        }),
+
+      updateInitiativeScore: (id, initiative) =>
+        set((state) => {
+          const updated = state.initiativeList.map((entry) =>
+            entry.id === id
+              ? { ...entry, initiative, updatedAt: new Date().toISOString() }
+              : entry
+          );
+          const sorted = sortInitiativeEntries(updated);
+          const nextIndex = getNextTurnIndexAfterReorder(
+            state.initiativeList,
+            state.initiativeTurnIndex,
+            sorted
+          );
+          return {
+            initiativeList: sorted,
+            initiativeTurnIndex: nextIndex,
+          };
+        }),
+
+      removeInitiativeEntry: (id) =>
+        set((state) => {
+          const filtered = state.initiativeList.filter((entry) => entry.id !== id);
+          const nextIndex = getNextTurnIndexAfterReorder(
+            state.initiativeList,
+            state.initiativeTurnIndex,
+            filtered
+          );
+          return {
+            initiativeList: filtered,
+            initiativeTurnIndex: nextIndex,
+            initiativeRound: filtered.length === 0 ? 1 : state.initiativeRound,
+          };
+        }),
+
+      setInitiativeTurnIndex: (index) =>
+        set((state) => {
+          if (state.initiativeList.length === 0) return { initiativeTurnIndex: 0 };
+          const clamped = Math.max(0, Math.min(index, state.initiativeList.length - 1));
+          return { initiativeTurnIndex: clamped };
+        }),
+
+      nextInitiativeTurn: () =>
+        set((state) => {
+          const count = state.initiativeList.length;
+          if (count === 0) return state;
+          if (state.initiativeTurnIndex + 1 >= count) {
+            return {
+              initiativeTurnIndex: 0,
+              initiativeRound: state.initiativeRound + 1,
+            };
+          }
+          return { initiativeTurnIndex: state.initiativeTurnIndex + 1 };
+        }),
+
+      prevInitiativeTurn: () =>
+        set((state) => {
+          const count = state.initiativeList.length;
+          if (count === 0) return state;
+          if (state.initiativeTurnIndex === 0) {
+            if (state.initiativeRound > 1) {
+              return {
+                initiativeTurnIndex: count - 1,
+                initiativeRound: state.initiativeRound - 1,
+              };
+            }
+            return state;
+          }
+          return { initiativeTurnIndex: state.initiativeTurnIndex - 1 };
+        }),
+
+      clearInitiative: () =>
+        set({
+          initiativeList: [],
+          initiativeTurnIndex: 0,
+          initiativeRound: 1,
+        }),
     }),
     {
       name: 'pokemon5e-obr-sheet-v1',
@@ -336,6 +569,9 @@ export const useCharacterStore = create<CharacterStoreState>()(
         rollVisibility: state.rollVisibility,
         diceIntegrationMode: state.diceIntegrationMode,
         rollLog: state.rollLog.slice(0, 30),
+        initiativeList: state.initiativeList,
+        initiativeTurnIndex: state.initiativeTurnIndex,
+        initiativeRound: state.initiativeRound,
       }),
     }
   )

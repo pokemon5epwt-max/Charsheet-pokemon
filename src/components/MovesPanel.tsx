@@ -67,20 +67,20 @@ export function MovesPanel({
 
   return (
     <section className="space-y-3">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-2">
         <div>
-          <h3 className="font-display text-sm font-semibold text-slate-200">
-            Moves ({pokemon.moves.length})
+          <h3 className="font-display text-xs font-bold text-slate-200 uppercase">
+            Battle Moves ({pokemon.moves.length})
           </h3>
-          <p className="text-xs text-slate-400">
-            Attack uses Move Power + Proficiency · Damage adds Move Power + STAB when type matches
+          <p className="text-xs text-slate-400 mt-0.5">
+            Attack: Power + Prof · Damage: Power + STAB when type matches
           </p>
         </div>
 
         <button
           type="button"
           onClick={() => setShowAddForm((prev) => !prev)}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-rose-600 hover:bg-rose-500 rounded-md transition-colors cursor-pointer shrink-0"
+          className="gba-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#D62839] hover:bg-[#E63946] cursor-pointer shrink-0"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>{showAddForm ? 'Cancel' : 'Add Move'}</span>
@@ -88,29 +88,26 @@ export function MovesPanel({
       </div>
 
       {showAddForm && (
-        <form
-          onSubmit={handleCreateMove}
-          className="p-4 bg-[#161A24] border border-[#2C3346] rounded-lg space-y-3"
-        >
+        <form onSubmit={handleCreateMove} className="gba-panel p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Move Name</label>
+              <label className="block text-xs text-slate-300 mb-1">Move Name</label>
               <input
                 type="text"
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Thunderbolt"
-                className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Type</label>
+              <label className="block text-xs text-slate-300 mb-1">Type</label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as PokemonType)}
-                className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
               >
                 {POKEMON_TYPES.map((t) => (
                   <option key={t} value={t}>
@@ -121,11 +118,11 @@ export function MovesPanel({
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Move Power</label>
+              <label className="block text-xs text-slate-300 mb-1">Move Power</label>
               <select
                 value={movePower}
                 onChange={(e) => setMovePower(e.target.value as AbilityKey)}
-                className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
               >
                 {ABILITY_KEYS.map((k) => (
                   <option key={k} value={k}>
@@ -136,46 +133,46 @@ export function MovesPanel({
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Damage Dice</label>
+              <label className="block text-xs text-slate-300 mb-1">Damage Dice</label>
               <input
                 type="text"
                 value={damageDice}
                 onChange={(e) => setDamageDice(e.target.value)}
                 placeholder="2d8 or empty"
-                className="w-full px-2.5 py-1.5 text-xs font-mono bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                className="gba-well w-full px-2.5 py-1.5 text-xs font-mono text-white"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-end">
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Max PP</label>
+              <label className="block text-xs text-slate-300 mb-1">Max PP</label>
               <input
                 type="number"
                 min={1}
                 max={40}
                 value={ppMax}
                 onChange={(e) => setPpMax(Math.max(1, parseInt(e.target.value || '10', 10)))}
-                className="w-full px-2.5 py-1.5 text-xs font-mono bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                className="gba-well w-full px-2.5 py-1.5 text-xs font-mono text-white"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Range</label>
+              <label className="block text-xs text-slate-300 mb-1">Range</label>
               <input
                 type="text"
                 value={range}
                 onChange={(e) => setRange(e.target.value)}
-                className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
               />
             </div>
 
             <div>
-              <label className="block text-xs text-slate-400 mb-1">Targeting</label>
+              <label className="block text-xs text-slate-300 mb-1">Targeting</label>
               <select
                 value={isAttack ? 'attack' : 'save'}
                 onChange={(e) => setIsAttack(e.target.value === 'attack')}
-                className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
               >
                 <option value="attack">Attack Roll</option>
                 <option value="save">Saving Throw DC</option>
@@ -184,11 +181,11 @@ export function MovesPanel({
 
             {!isAttack ? (
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Target Save</label>
+                <label className="block text-xs text-slate-300 mb-1">Target Save</label>
                 <select
                   value={saveAbility}
                   onChange={(e) => setSaveAbility(e.target.value as AbilityKey)}
-                  className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                  className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
                 >
                   {ABILITY_KEYS.map((k) => (
                     <option key={k} value={k}>
@@ -198,33 +195,33 @@ export function MovesPanel({
                 </select>
               </div>
             ) : (
-              <label className="inline-flex items-center gap-2 text-xs text-slate-300 pb-1.5 cursor-pointer">
+              <label className="inline-flex items-center gap-2 text-xs text-slate-200 pb-1.5 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={stabEligible}
                   onChange={(e) => setStabEligible(e.target.checked)}
-                  className="rounded border-[#2A3042] bg-[#0F1117] text-rose-500"
+                  className="border-[#090D12] bg-[#10161D] text-[#E63946]"
                 />
-                <span>Allow STAB bonus</span>
+                <span>Allow STAB</span>
               </label>
             )}
           </div>
 
           <div>
-            <label className="block text-xs text-slate-400 mb-1">Description</label>
+            <label className="block text-xs text-slate-300 mb-1">Description</label>
             <textarea
               rows={2}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Move rules, status effects, range..."
-              className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+              className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
             />
           </div>
 
           <div className="flex justify-end gap-2">
             <button
               type="submit"
-              className="px-4 py-1.5 text-xs font-medium text-white bg-rose-600 hover:bg-rose-500 rounded-md cursor-pointer"
+              className="gba-btn px-4 py-1.5 text-xs font-semibold text-white bg-[#D62839] hover:bg-[#E63946] cursor-pointer"
             >
               Save Move
             </button>
@@ -233,9 +230,9 @@ export function MovesPanel({
       )}
 
       {pokemon.moves.length === 0 ? (
-        <div className="p-6 bg-[#161A24] border border-dashed border-[#2A3042] rounded-lg text-center">
-          <p className="text-sm text-slate-400">
-            No moves learned yet. Add a move to unlock one-click Attack & Damage rolls.
+        <div className="gba-panel p-6 text-center">
+          <p className="text-sm text-slate-300">
+            No moves learned yet. Add a move to unlock one-click Attack &amp; Damage rolls.
           </p>
         </div>
       ) : (
@@ -250,47 +247,49 @@ export function MovesPanel({
             return (
               <div
                 key={move.id}
-                className="bg-[#161A24] border border-[#252A38] rounded-lg p-3.5 flex flex-col gap-3"
+                className="gba-panel p-3.5 flex flex-col gap-3"
               >
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className={`px-2 py-0.5 text-[11px] font-semibold rounded border ${typeStyle.bg} ${typeStyle.text} ${typeStyle.border}`}
+                        className={`px-2 py-0.5 font-mono text-[10px] font-bold uppercase border-2 border-[#090D12] ${typeStyle.bg} ${typeStyle.text}`}
                       >
                         {move.type}
                       </span>
-                      <h4 className="font-display text-sm font-semibold text-slate-100">
+                      <h4 className="font-display text-xs sm:text-sm font-bold text-white">
                         {move.name}
                       </h4>
-                      <span className="text-xs text-slate-400">
+                      <span className="text-xs text-slate-300">
                         · {ABILITY_LABELS[move.movePower].short} · {move.castingTime} · {move.range}
                         {isStab ? ' · STAB' : ''}
                       </span>
                     </div>
 
                     {move.description && (
-                      <p className="text-xs text-slate-400 mt-1.5 leading-relaxed">
+                      <p className="text-sm text-slate-300 mt-1.5 leading-snug">
                         {move.description}
                       </p>
                     )}
                   </div>
 
-                  {/* PP Tracker + Delete */}
+                  {/* GBA Pixel PP Counter + Delete */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <div className="flex items-center gap-1 bg-[#0F1117] border border-[#2A3042] rounded-md px-2 py-1">
-                      <span className="text-[11px] text-slate-400 mr-1">PP</span>
+                    <div className="gba-well flex items-center gap-1 px-2 py-1">
+                      <span className="font-mono text-[10px] font-bold text-[#F6C445] mr-1">
+                        PP
+                      </span>
                       <button
                         type="button"
                         aria-label={`Spend 1 PP for ${move.name}`}
                         onClick={() => onAdjustPp(move.id, -1)}
-                        className="w-5 h-5 inline-flex items-center justify-center rounded hover:bg-[#252A38] text-slate-300 cursor-pointer"
+                        className="w-5 h-5 inline-flex items-center justify-center hover:bg-[#263342] text-slate-200 cursor-pointer"
                       >
                         <Minus className="w-3 h-3" />
                       </button>
                       <span
-                        className={`font-mono text-xs font-semibold px-1 ${
-                          move.ppCurrent === 0 ? 'text-rose-400' : 'text-slate-100'
+                        className={`font-mono text-[11px] font-bold px-1 ${
+                          move.ppCurrent === 0 ? 'text-[#F04848]' : 'text-white'
                         }`}
                       >
                         {move.ppCurrent}/{move.ppMax}
@@ -299,7 +298,7 @@ export function MovesPanel({
                         type="button"
                         aria-label={`Restore 1 PP for ${move.name}`}
                         onClick={() => onAdjustPp(move.id, 1)}
-                        className="w-5 h-5 inline-flex items-center justify-center rounded hover:bg-[#252A38] text-slate-300 cursor-pointer"
+                        className="w-5 h-5 inline-flex items-center justify-center hover:bg-[#263342] text-slate-200 cursor-pointer"
                       >
                         <Plus className="w-3 h-3" />
                       </button>
@@ -309,33 +308,33 @@ export function MovesPanel({
                       type="button"
                       aria-label={`Delete ${move.name}`}
                       onClick={() => onRemoveMove(move.id)}
-                      className="p-1.5 rounded-md text-slate-500 hover:text-rose-400 hover:bg-[#1C202B] cursor-pointer"
+                      className="gba-btn p-1.5 bg-[#131A22] hover:bg-[#4A1922] text-slate-400 hover:text-rose-300 cursor-pointer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
 
-                {/* Big Clear Roll Action Row */}
-                <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-[#222736]">
+                {/* Battle Command Buttons */}
+                <div className="flex flex-wrap items-center gap-2 pt-2 border-t-2 border-[#090D12]">
                   {move.isAttack ? (
                     <button
                       type="button"
                       onClick={() => onRollAttack(move)}
-                      className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-white bg-[#232A3B] hover:bg-[#2C354A] border border-[#38435E] hover:border-rose-500/60 rounded-md transition-colors cursor-pointer"
+                      className="gba-btn inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-[#273545] hover:bg-[#324357] cursor-pointer"
                     >
-                      <Crosshair className="w-3.5 h-3.5 text-rose-400" />
-                      <span>Roll Attack</span>
-                      <span className="font-mono text-rose-300">
+                      <Crosshair className="w-3.5 h-3.5 text-[#F6C445]" />
+                      <span>Attack</span>
+                      <span className="font-mono text-[11px] text-[#F6C445]">
                         {formatSignedModifier(atkBonus)}
                       </span>
                     </button>
                   ) : (
-                    <div className="inline-flex items-center gap-2 px-3 py-2 text-xs font-medium text-slate-200 bg-[#12151E] border border-[#2A3042] rounded-md">
+                    <div className="gba-well inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-200">
                       <span>
                         Target {ABILITY_LABELS[move.saveAbility ?? 'dex'].short} Save
                       </span>
-                      <span className="font-mono font-semibold text-amber-300">
+                      <span className="font-mono text-[11px] font-bold text-[#F6C445]">
                         DC {saveDc}
                       </span>
                     </div>
@@ -346,11 +345,11 @@ export function MovesPanel({
                       <button
                         type="button"
                         onClick={() => onRollDamage(move, false)}
-                        className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-white bg-rose-600/90 hover:bg-rose-500 rounded-md transition-colors cursor-pointer"
+                        className="gba-btn inline-flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-[#C82838] hover:bg-[#E03546] cursor-pointer"
                       >
                         <Flame className="w-3.5 h-3.5" />
-                        <span>Roll Damage</span>
-                        <span className="font-mono">
+                        <span>Damage</span>
+                        <span className="font-mono text-[11px]">
                           {move.damageDice}
                           {dmgInfo.totalBonus !== 0
                             ? ` ${formatSignedModifier(dmgInfo.totalBonus)}`
@@ -362,7 +361,7 @@ export function MovesPanel({
                         type="button"
                         onClick={() => onRollDamage(move, true)}
                         title="Roll Critical Hit Damage (2× damage dice)"
-                        className="inline-flex items-center gap-1 px-2.5 py-2 text-xs font-semibold text-amber-200 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 rounded-md transition-colors cursor-pointer"
+                        className="gba-btn inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-bold text-[#090D12] bg-[#F6C445] hover:bg-[#FBD160] cursor-pointer"
                       >
                         <span>Crit 2×</span>
                       </button>
@@ -373,7 +372,7 @@ export function MovesPanel({
                     <button
                       type="button"
                       onClick={() => onAdjustPp(move.id, -1)}
-                      className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-200 bg-[#1C202B] hover:bg-[#252A38] border border-[#2C3346] rounded-md cursor-pointer"
+                      className="gba-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-100 bg-[#273545] hover:bg-[#324357] cursor-pointer"
                     >
                       <span>Use Move (-1 PP)</span>
                     </button>

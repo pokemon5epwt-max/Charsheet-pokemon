@@ -259,6 +259,7 @@ export function executeRoll(req: RollRequest): RollEntry {
       isCrit,
       isFumble,
       moveType: req.moveType,
+      dexMod: req.category === 'initiative' ? effectiveMod : undefined,
       source: 'local',
     };
   }

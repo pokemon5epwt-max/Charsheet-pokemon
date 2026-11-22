@@ -47,25 +47,27 @@ export function SkillsPanel({
   });
 
   return (
-    <section className="bg-[#161A24] border border-[#252A38] rounded-lg p-4">
+    <section className="gba-panel p-4">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <div>
-          <h3 className="font-display text-sm font-semibold text-slate-200">Skills</h3>
+          <h3 className="font-display text-xs font-bold text-slate-200 uppercase">
+            Skills
+          </h3>
           <p className="text-xs text-slate-400">
             {isEditing
-              ? 'Click Prof/Exp badge to cycle proficiency'
+              ? 'Click Prof/Exp square to cycle proficiency'
               : 'Click any skill row to roll check'}
           </p>
         </div>
 
         <div className="relative">
-          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Filter skills..."
-            className="pl-8 pr-3 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded-md text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-rose-500/60 w-40"
+            className="gba-well pl-8 pr-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none w-40"
           />
         </div>
       </div>
@@ -79,7 +81,7 @@ export function SkillsPanel({
           return (
             <div
               key={skill}
-              className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-md bg-[#12151E] hover:bg-[#1C212E] border border-[#222736] transition-colors"
+              className="gba-well flex items-center justify-between gap-2 px-2.5 py-2 hover:bg-[#1A232E] transition-colors"
             >
               <div className="flex items-center gap-2 min-w-0">
                 <button
@@ -88,14 +90,14 @@ export function SkillsPanel({
                   title={
                     isEditing
                       ? 'Cycle None / Proficient / Expertise'
-                      : `Toggle proficiency or roll ${skill}`
+                      : `Roll ${skill}`
                   }
-                  className={`px-1.5 py-0.5 text-[10px] font-mono rounded border shrink-0 cursor-pointer ${
+                  className={`px-1.5 py-0.5 font-mono text-[9px] font-bold border border-[#090D12] shrink-0 cursor-pointer ${
                     profState === 'expertise'
-                      ? 'bg-amber-500/20 border-amber-500/50 text-amber-300'
+                      ? 'bg-[#F6C445] text-[#090D12]'
                       : profState === 'proficient'
-                        ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
-                        : 'bg-[#0F1117] border-[#2A3042] text-slate-500 hover:text-slate-300'
+                        ? 'bg-[#267347] text-white'
+                        : 'bg-[#18212B] text-slate-400 hover:text-slate-200'
                   }`}
                 >
                   {PROF_LABEL[profState]}
@@ -105,10 +107,10 @@ export function SkillsPanel({
                   onClick={() => onRollSkill(skill)}
                   className="text-left min-w-0 flex items-center gap-1.5 cursor-pointer truncate"
                 >
-                  <span className="text-xs text-slate-200 truncate hover:text-white">
+                  <span className="text-xs text-slate-100 truncate hover:text-white">
                     {skill}
                   </span>
-                  <span className="text-[11px] text-slate-500 shrink-0">
+                  <span className="text-[11px] text-slate-400 shrink-0">
                     ({ABILITY_LABELS[abilityKey].short})
                   </span>
                 </button>
@@ -117,7 +119,7 @@ export function SkillsPanel({
               <button
                 type="button"
                 onClick={() => onRollSkill(skill)}
-                className="font-mono text-xs font-semibold text-slate-100 hover:text-rose-300 px-2 py-0.5 rounded bg-[#1A1F2B] border border-[#2A3042] shrink-0 cursor-pointer"
+                className="gba-btn font-mono text-[11px] font-bold text-white bg-[#232F3E] hover:bg-[#2F3F52] px-2 py-0.5 shrink-0 cursor-pointer"
               >
                 {formatSignedModifier(mod)}
               </button>

@@ -61,11 +61,18 @@ export function CharacterSheet() {
 
   const primaryTypeHex = isPokemon
     ? TYPE_STYLES[activeChar.types[0] ?? 'Normal'].hex
-    : '#E11D48';
+    : '#E63946';
   const secondaryTypeHex =
     isPokemon && activeChar.types[1]
       ? TYPE_STYLES[activeChar.types[1]].hex
       : primaryTypeHex;
+
+  const hpPct =
+    activeChar.hpMax > 0
+      ? Math.max(0, Math.min(100, (activeChar.hpCurrent / activeChar.hpMax) * 100))
+      : 0;
+  const hpBarColor =
+    hpPct > 50 ? 'bg-[#38D46A]' : hpPct > 20 ? 'bg-[#F8B828]' : 'bg-[#F04848]';
 
   const handleUpdateAbility = (key: AbilityKey, score: number) => {
     const nextAbilities = { ...activeChar.abilities, [key]: score };
@@ -242,10 +249,10 @@ export function CharacterSheet() {
   };
 
   return (
-    <main className="flex-1 overflow-y-auto p-3.5 sm:p-4 lg:p-6 space-y-5 poke-canvas-bg">
+    <main className="flex-1 overflow-y-auto p-3.5 sm:p-4 lg:p-6 space-y-4 gba-canvas-bg">
       {/* Compact Roll Mode & Visibility Bar for Medium Popover (< xl) */}
-      <div className="xl:hidden flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[#252A38]">
-        <div className="inline-flex items-center gap-0.5 p-0.5 bg-[#161A24] border border-[#252A38] rounded-md">
+      <div className="xl:hidden flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b-2 border-[#090D12]">
+        <div className="gba-well inline-flex items-center gap-0.5 p-0.5">
           {(
             [
               { id: 'disadvantage', label: 'Disadv' },
@@ -257,13 +264,13 @@ export function CharacterSheet() {
               key={opt.id}
               type="button"
               onClick={() => setRollMode(opt.id)}
-              className={`px-2.5 py-1 text-[11px] font-medium rounded transition-colors cursor-pointer ${
+              className={`px-2.5 py-1 text-xs font-medium cursor-pointer transition-colors ${
                 rollMode === opt.id
                   ? opt.id === 'advantage'
-                    ? 'bg-emerald-600 text-white'
+                    ? 'bg-[#267347] text-white'
                     : opt.id === 'disadvantage'
-                      ? 'bg-amber-600 text-white'
-                      : 'bg-[#252B3B] text-white'
+                      ? 'bg-[#A66316] text-white'
+                      : 'bg-[#2A394A] text-white'
                   : 'text-slate-400 hover:text-slate-200'
               }`}
             >
@@ -277,10 +284,10 @@ export function CharacterSheet() {
           onClick={() =>
             setRollVisibility(rollVisibility === 'visible' ? 'hidden' : 'visible')
           }
-          className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium rounded-md border transition-colors cursor-pointer ${
+          className={`gba-btn inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium cursor-pointer ${
             rollVisibility === 'hidden'
-              ? 'bg-violet-600 border-violet-500 text-white'
-              : 'bg-[#161A24] border-[#252A38] text-slate-300 hover:text-white'
+              ? 'bg-[#5B328A] text-white'
+              : 'bg-[#1E2833] text-slate-200 hover:bg-[#273442]'
           }`}
           title="Toggle Visible vs Hidden (GM + Roller only)"
         >
@@ -298,15 +305,15 @@ export function CharacterSheet() {
         </button>
       </div>
 
-      {/* Character Header & Edit Switch */}
+      {/* GBA Summary Hero Card */}
       <section
         style={{
-          backgroundImage: `linear-gradient(125deg, ${primaryTypeHex}24 0%, ${secondaryTypeHex}12 45%, rgba(22, 26, 36, 0.92) 100%)`,
-          borderColor: `${primaryTypeHex}44`,
+          backgroundImage: `linear-gradient(125deg, ${primaryTypeHex}2B 0%, ${secondaryTypeHex}14 48%, rgba(30, 40, 51, 0.96) 100%)`,
+          boxShadow: `inset 2px 2px 0 ${primaryTypeHex}66, inset -2px -2px 0 #121820`,
         }}
-        className="relative overflow-hidden rounded-xl border bg-[#161A24] p-4 flex flex-wrap items-start justify-between gap-4"
+        className="gba-panel relative overflow-hidden p-4 flex flex-wrap items-start justify-between gap-4"
       >
-        <div className="absolute -right-6 -bottom-10 pointer-events-none">
+        <div className="absolute -right-4 -bottom-6 pointer-events-none">
           <PokeballBackdrop colorHex={primaryTypeHex} />
         </div>
         <div className="space-y-1.5 min-w-0 relative z-10">
@@ -320,7 +327,7 @@ export function CharacterSheet() {
                     ? updatePokemon(activeChar.id, { name: e.target.value })
                     : updateTrainer({ name: e.target.value })
                 }
-                className="font-display text-xl font-bold px-2.5 py-1 bg-[#161A24] border border-[#323A4F] rounded-md text-slate-100"
+                className="gba-well font-display text-base sm:text-lg font-bold px-2.5 py-1 text-white"
                 aria-label="Character Name"
               />
               {isPokemon && (
@@ -331,14 +338,14 @@ export function CharacterSheet() {
                     updatePokemon(activeChar.id, { species: e.target.value })
                   }
                   placeholder="Species"
-                  className="text-sm px-2.5 py-1.5 bg-[#161A24] border border-[#323A4F] rounded-md text-slate-200"
+                  className="gba-well text-sm px-2.5 py-1.5 text-slate-100"
                   aria-label="Pokémon Species"
                 />
               )}
             </div>
           ) : (
-            <div className="flex flex-wrap items-center gap-2.5">
-              <h1 className="font-display text-2xl font-bold tracking-tight text-slate-100">
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="font-display text-lg sm:text-xl font-bold tracking-tight text-white drop-shadow-[1px_1px_0_#090D12]">
                 {activeChar.name}
               </h1>
               {isPokemon &&
@@ -347,7 +354,7 @@ export function CharacterSheet() {
                   return (
                     <span
                       key={t}
-                      className={`px-2 py-0.5 text-xs font-semibold rounded border ${st.bg} ${st.text} ${st.border}`}
+                      className={`px-2 py-0.5 font-mono text-[10px] font-bold uppercase border-2 border-[#090D12] ${st.bg} ${st.text}`}
                     >
                       {t}
                     </span>
@@ -357,14 +364,16 @@ export function CharacterSheet() {
           )}
 
           {isPokemon ? (
-            <p className="text-sm text-slate-400">
-              {activeChar.species} · Level {activeChar.level} · SR {activeChar.sr} ·{' '}
+            <p className="text-sm text-slate-200">
+              {activeChar.species} · Lv.{activeChar.level} · SR {activeChar.sr} ·{' '}
               {activeChar.nature} Nature · Ability: {activeChar.ability}
               {activeChar.heldItem ? ` · Held: ${activeChar.heldItem}` : ''}
             </p>
           ) : (
-            <p className="text-sm text-slate-300 flex flex-wrap items-center gap-1.5">
-              <span>{activeChar.trainerClass} · Level {activeChar.level}</span>
+            <p className="text-sm text-slate-200 flex flex-wrap items-center gap-1.5">
+              <span>
+                {activeChar.trainerClass} · Lv.{activeChar.level}
+              </span>
               {activeChar.origin && <span>· {activeChar.origin}</span>}
               <span className="inline-flex items-center gap-1">
                 · <LeagueBadgeIcon className="w-3.5 h-3.5" /> {activeChar.badges} Badges
@@ -373,15 +382,15 @@ export function CharacterSheet() {
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 relative z-10">
+        <div className="flex flex-wrap items-center gap-2 shrink-0 relative z-10">
           <button
             type="button"
             onClick={handleRollInitiative}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-100 bg-[#1C212E] hover:bg-[#252B3B] border border-[#2F364B] rounded-md transition-colors cursor-pointer"
+            className="gba-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-[#090D12] bg-[#F6C445] hover:bg-[#FBD160] cursor-pointer"
           >
-            <Dices className="w-3.5 h-3.5 text-amber-400" />
+            <Dices className="w-3.5 h-3.5" />
             <span>Initiative</span>
-            <span className="font-mono text-amber-300">
+            <span className="font-mono text-[11px]">
               {formatSignedModifier(initBonus)}
             </span>
           </button>
@@ -391,26 +400,26 @@ export function CharacterSheet() {
               type="button"
               onClick={resetTrainerToBlank}
               title="Clear Trainer sheet to blank level 1 defaults"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white bg-[#161A24] hover:bg-[#1C212E] border border-[#2A3042] rounded-md cursor-pointer"
+              className="gba-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-200 bg-[#1B242E] hover:bg-[#253240] cursor-pointer"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              <span>Blank Trainer</span>
+              <span>Blank</span>
             </button>
           )}
 
           <button
             type="button"
             onClick={() => setIsEditing((prev) => !prev)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md border transition-colors cursor-pointer ${
+            className={`gba-btn inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold cursor-pointer ${
               isEditing
-                ? 'bg-emerald-600 hover:bg-emerald-500 border-emerald-500 text-white'
-                : 'bg-[#161A24] hover:bg-[#1C212E] border-[#2A3042] text-slate-200'
+                ? 'bg-[#267347] hover:bg-[#2E8A56] text-white'
+                : 'bg-[#1E2833] hover:bg-[#283544] text-slate-100'
             }`}
           >
             {isEditing ? (
               <>
                 <Check className="w-3.5 h-3.5" />
-                <span>Done Editing</span>
+                <span>Done</span>
               </>
             ) : (
               <>
@@ -424,12 +433,12 @@ export function CharacterSheet() {
 
       {/* Edit Metadata Row */}
       {isEditing && (
-        <section className="bg-[#161A24] border border-[#2A3042] rounded-lg p-4 space-y-4">
+        <section className="gba-panel p-4 space-y-4">
           {isPokemon ? (
             <>
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Level</label>
+                  <label className="block text-xs text-slate-300 mb-1">Level</label>
                   <input
                     type="number"
                     min={1}
@@ -440,66 +449,66 @@ export function CharacterSheet() {
                         level: Math.max(1, Math.min(20, parseInt(e.target.value || '1', 10))),
                       })
                     }
-                    className="w-full px-2.5 py-1.5 text-xs font-mono bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                    className="gba-well w-full px-2.5 py-1.5 text-xs font-mono text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Species Rating (SR)</label>
+                  <label className="block text-xs text-slate-300 mb-1">SR</label>
                   <input
                     type="text"
                     value={activeChar.sr}
                     onChange={(e) => updatePokemon(activeChar.id, { sr: e.target.value })}
-                    className="w-full px-2.5 py-1.5 text-xs font-mono bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                    className="gba-well w-full px-2.5 py-1.5 text-xs font-mono text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Nature</label>
+                  <label className="block text-xs text-slate-300 mb-1">Nature</label>
                   <input
                     type="text"
                     value={activeChar.nature}
                     onChange={(e) =>
                       updatePokemon(activeChar.id, { nature: e.target.value })
                     }
-                    className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                    className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Ability</label>
+                  <label className="block text-xs text-slate-300 mb-1">Ability</label>
                   <input
                     type="text"
                     value={activeChar.ability}
                     onChange={(e) =>
                       updatePokemon(activeChar.id, { ability: e.target.value })
                     }
-                    className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                    className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Held Item</label>
+                  <label className="block text-xs text-slate-300 mb-1">Held Item</label>
                   <input
                     type="text"
                     value={activeChar.heldItem}
                     onChange={(e) =>
                       updatePokemon(activeChar.id, { heldItem: e.target.value })
                     }
-                    className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                    className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs text-slate-400 mb-1">Status</label>
+                  <label className="block text-xs text-slate-300 mb-1">Status</label>
                   <input
                     type="text"
                     value={activeChar.statusCondition}
                     onChange={(e) =>
                       updatePokemon(activeChar.id, { statusCondition: e.target.value })
                     }
-                    className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                    className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs text-slate-400 mb-1.5">
+                <label className="block text-xs text-slate-300 mb-1.5">
                   Types (select 1 or 2)
                 </label>
                 <div className="flex flex-wrap gap-1.5">
@@ -511,10 +520,10 @@ export function CharacterSheet() {
                         key={t}
                         type="button"
                         onClick={() => togglePokemonType(activeChar, t)}
-                        className={`px-2 py-1 text-[11px] font-medium rounded border transition-colors cursor-pointer ${
+                        className={`px-2 py-1 font-mono text-[10px] font-bold uppercase border-2 border-[#090D12] cursor-pointer ${
                           selected
-                            ? `${st.bg} ${st.text} ${st.border}`
-                            : 'bg-[#0F1117] border-[#252A38] text-slate-400 hover:text-slate-200'
+                            ? `${st.bg} ${st.text}`
+                            : 'bg-[#10161D] text-slate-400 hover:text-slate-200'
                         }`}
                       >
                         {t}
@@ -525,7 +534,7 @@ export function CharacterSheet() {
               </div>
 
               <div>
-                <label className="block text-xs text-slate-400 mb-1">
+                <label className="block text-xs text-slate-300 mb-1">
                   Ability Description
                 </label>
                 <input
@@ -534,14 +543,14 @@ export function CharacterSheet() {
                   onChange={(e) =>
                     updatePokemon(activeChar.id, { abilityDescription: e.target.value })
                   }
-                  className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                  className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
                 />
               </div>
             </>
           ) : (
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Level</label>
+                <label className="block text-xs text-slate-300 mb-1">Level</label>
                 <input
                   type="number"
                   min={1}
@@ -552,29 +561,29 @@ export function CharacterSheet() {
                       level: Math.max(1, Math.min(20, parseInt(e.target.value || '1', 10))),
                     })
                   }
-                  className="w-full px-2.5 py-1.5 text-xs font-mono bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                  className="gba-well w-full px-2.5 py-1.5 text-xs font-mono text-white"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Class</label>
+                <label className="block text-xs text-slate-300 mb-1">Class</label>
                 <input
                   type="text"
                   value={activeChar.trainerClass}
                   onChange={(e) => updateTrainer({ trainerClass: e.target.value })}
-                  className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                  className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Origin</label>
+                <label className="block text-xs text-slate-300 mb-1">Origin</label>
                 <input
                   type="text"
                   value={activeChar.origin}
                   onChange={(e) => updateTrainer({ origin: e.target.value })}
-                  className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                  className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Badges</label>
+                <label className="block text-xs text-slate-300 mb-1">Badges</label>
                 <input
                   type="number"
                   min={0}
@@ -582,11 +591,11 @@ export function CharacterSheet() {
                   onChange={(e) =>
                     updateTrainer({ badges: Math.max(0, parseInt(e.target.value || '0', 10)) })
                   }
-                  className="w-full px-2.5 py-1.5 text-xs font-mono bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                  className="gba-well w-full px-2.5 py-1.5 text-xs font-mono text-white"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Money (¥)</label>
+                <label className="block text-xs text-slate-300 mb-1">Money (¥)</label>
                 <input
                   type="number"
                   min={0}
@@ -594,16 +603,16 @@ export function CharacterSheet() {
                   onChange={(e) =>
                     updateTrainer({ money: Math.max(0, parseInt(e.target.value || '0', 10)) })
                   }
-                  className="w-full px-2.5 py-1.5 text-xs font-mono bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                  className="gba-well w-full px-2.5 py-1.5 text-xs font-mono text-white"
                 />
               </div>
               <div>
-                <label className="block text-xs text-slate-400 mb-1">Paths / Specs</label>
+                <label className="block text-xs text-slate-300 mb-1">Paths / Specs</label>
                 <input
                   type="text"
                   value={activeChar.trainerPaths}
                   onChange={(e) => updateTrainer({ trainerPaths: e.target.value })}
-                  className="w-full px-2.5 py-1.5 text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+                  className="gba-well w-full px-2.5 py-1.5 text-xs text-white"
                 />
               </div>
             </div>
@@ -611,13 +620,13 @@ export function CharacterSheet() {
         </section>
       )}
 
-      {/* Combat Vitals Strip */}
+      {/* GBA Combat Vitals HUD */}
       <section className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3">
-        {/* Hit Points */}
-        <div className="col-span-2 bg-[#161A24] border border-[#252A38] rounded-lg p-3.5 flex flex-col justify-between gap-2.5">
+        {/* Hit Points with GBA Battle HP Bar */}
+        <div className="col-span-2 gba-panel p-3.5 flex flex-col justify-between gap-2.5">
           <div className="flex items-center justify-between">
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400">
-              <Heart className="w-3.5 h-3.5 text-rose-400" />
+            <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+              <Heart className="w-3.5 h-3.5 text-[#E63946]" />
               Hit Points
             </span>
             {isEditing ? (
@@ -630,9 +639,9 @@ export function CharacterSheet() {
                     if (isPokemon) updatePokemon(activeChar.id, { hpCurrent: val });
                     else updateTrainer({ hpCurrent: val });
                   }}
-                  className="w-14 px-1.5 py-0.5 text-right bg-[#0F1117] border border-[#323A4F] rounded text-slate-100"
+                  className="gba-well w-14 px-1.5 py-0.5 text-right text-white"
                 />
-                <span className="text-slate-500">/</span>
+                <span className="text-slate-400">/</span>
                 <input
                   type="number"
                   value={activeChar.hpMax}
@@ -641,24 +650,36 @@ export function CharacterSheet() {
                     if (isPokemon) updatePokemon(activeChar.id, { hpMax: val });
                     else updateTrainer({ hpMax: val });
                   }}
-                  className="w-14 px-1.5 py-0.5 text-right bg-[#0F1117] border border-[#323A4F] rounded text-slate-100"
+                  className="gba-well w-14 px-1.5 py-0.5 text-right text-white"
                 />
               </div>
             ) : (
-              <span className="font-mono text-lg font-bold text-slate-100">
+              <span className="font-mono text-base font-bold text-white">
                 {activeChar.hpCurrent}{' '}
-                <span className="text-sm font-normal text-slate-500">
+                <span className="text-xs font-normal text-slate-400">
                   / {activeChar.hpMax}
                 </span>
               </span>
             )}
           </div>
 
+          <div className="flex items-center gap-1.5">
+            <span className="font-mono text-[10px] font-bold text-[#F6C445] bg-[#0B1016] border border-[#090D12] px-1 py-0.5 leading-none">
+              HP
+            </span>
+            <div className="flex-1 h-3 bg-[#0B1016] border-2 border-[#090D12] p-[1px]">
+              <div
+                className={`h-full ${hpBarColor} transition-all duration-150`}
+                style={{ width: `${hpPct}%` }}
+              />
+            </div>
+          </div>
+
           <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => applyCustomHpDelta(-1)}
-              className="px-2.5 py-1 text-xs font-medium text-rose-200 bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 rounded cursor-pointer"
+              className="gba-btn px-2.5 py-1 text-xs font-semibold text-white bg-[#A62834] hover:bg-[#C2303E] cursor-pointer"
             >
               Damage
             </button>
@@ -668,12 +689,12 @@ export function CharacterSheet() {
               value={hpDeltaInput}
               onChange={(e) => setHpDeltaInput(e.target.value)}
               aria-label="HP Adjustment Amount"
-              className="w-16 px-2 py-1 text-center font-mono text-xs bg-[#0F1117] border border-[#2A3042] rounded text-slate-100"
+              className="gba-well w-14 px-2 py-1 text-center font-mono text-xs text-white"
             />
             <button
               type="button"
               onClick={() => applyCustomHpDelta(1)}
-              className="px-2.5 py-1 text-xs font-medium text-emerald-200 bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 rounded cursor-pointer"
+              className="gba-btn px-2.5 py-1 text-xs font-semibold text-white bg-[#1F6A44] hover:bg-[#278254] cursor-pointer"
             >
               Heal
             </button>
@@ -681,9 +702,9 @@ export function CharacterSheet() {
         </div>
 
         {/* Armor Class */}
-        <div className="bg-[#161A24] border border-[#252A38] rounded-lg p-3.5 flex flex-col justify-between">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400">
-            <Shield className="w-3.5 h-3.5 text-sky-400" />
+        <div className="gba-panel p-3.5 flex flex-col justify-between">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+            <Shield className="w-3.5 h-3.5 text-[#38BDF8]" />
             Armor Class
           </span>
           {isEditing ? (
@@ -695,18 +716,18 @@ export function CharacterSheet() {
                 if (isPokemon) updatePokemon(activeChar.id, { ac });
                 else updateTrainer({ ac });
               }}
-              className="w-20 mt-2 px-2 py-1 font-mono text-lg font-bold bg-[#0F1117] border border-[#323A4F] rounded text-slate-100"
+              className="gba-well w-20 mt-2 px-2 py-1 font-mono text-base font-bold text-white"
             />
           ) : (
-            <span className="font-mono text-2xl font-bold text-slate-100 mt-1">
+            <span className="font-mono text-xl font-bold text-white mt-1">
               {activeChar.ac}
             </span>
           )}
         </div>
 
         {/* Speed */}
-        <div className="bg-[#161A24] border border-[#252A38] rounded-lg p-3.5 flex flex-col justify-between">
-          <span className="text-xs font-medium text-slate-400">Speed</span>
+        <div className="gba-panel p-3.5 flex flex-col justify-between">
+          <span className="text-xs font-semibold text-slate-300">Speed</span>
           {isEditing ? (
             <input
               type="number"
@@ -716,27 +737,26 @@ export function CharacterSheet() {
                 if (isPokemon) updatePokemon(activeChar.id, { speed });
                 else updateTrainer({ speed });
               }}
-              className="w-20 mt-2 px-2 py-1 font-mono text-lg font-bold bg-[#0F1117] border border-[#323A4F] rounded text-slate-100"
+              className="gba-well w-20 mt-2 px-2 py-1 font-mono text-base font-bold text-white"
             />
           ) : (
-            <span className="font-mono text-2xl font-bold text-slate-100 mt-1">
-              {activeChar.speed} <span className="text-xs font-normal text-slate-500">ft</span>
+            <span className="font-mono text-xl font-bold text-white mt-1">
+              {activeChar.speed}{' '}
+              <span className="font-sans text-xs font-normal text-slate-400">ft</span>
             </span>
           )}
         </div>
 
         {/* Proficiency & STAB */}
-        <div className="bg-[#161A24] border border-[#252A38] rounded-lg p-3.5 flex flex-col justify-between">
-          <span className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-400">
-            <Zap className="w-3.5 h-3.5 text-amber-400" />
-            {isPokemon ? 'Proficiency · STAB' : 'Proficiency Bonus'}
+        <div className="gba-panel p-3.5 flex flex-col justify-between">
+          <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+            <Zap className="w-3.5 h-3.5 text-[#F6C445]" />
+            {isPokemon ? 'Prof · STAB' : 'Proficiency'}
           </span>
-          <div className="flex items-baseline gap-3 mt-1">
-            <span className="font-mono text-2xl font-bold text-slate-100">
-              +{profBonus}
-            </span>
+          <div className="flex items-baseline gap-2.5 mt-1">
+            <span className="font-mono text-xl font-bold text-white">+{profBonus}</span>
             {isPokemon && (
-              <span className="font-mono text-sm font-semibold text-amber-300">
+              <span className="font-mono text-xs font-bold text-[#F6C445]">
                 STAB +{stabValue}
               </span>
             )}
@@ -744,13 +764,13 @@ export function CharacterSheet() {
         </div>
       </section>
 
-      {/* Pokémon Ability Callout (flat hairline box, no thick left bar) */}
+      {/* Pokémon Ability Dialogue Callout */}
       {isPokemon && activeChar.abilityDescription && (
-        <section className="bg-[#161A24] border border-[#252A38] rounded-lg px-4 py-3">
-          <div className="text-xs font-semibold text-slate-200">
-            Ability: {activeChar.ability}
+        <section className="gba-panel px-4 py-3">
+          <div className="font-display text-xs font-bold text-[#F6C445]">
+            ABILITY: {activeChar.ability}
           </div>
-          <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+          <p className="text-sm text-slate-200 mt-1 leading-relaxed">
             {activeChar.abilityDescription}
           </p>
         </section>
@@ -793,9 +813,9 @@ export function CharacterSheet() {
       />
 
       {/* Notes */}
-      <section className="bg-[#161A24] border border-[#252A38] rounded-lg p-4">
-        <label className="block font-display text-sm font-semibold text-slate-200 mb-2">
-          Notes & Tactics
+      <section className="gba-panel p-4">
+        <label className="block font-display text-xs font-bold text-slate-200 mb-2 uppercase">
+          Trainer Notes &amp; Tactics
         </label>
         <textarea
           rows={3}
@@ -805,7 +825,7 @@ export function CharacterSheet() {
             else updateTrainer({ notes: e.target.value });
           }}
           placeholder="Track items, evolution requirements, trainer paths, or battle notes..."
-          className="w-full px-3 py-2 text-xs bg-[#0F1117] border border-[#2A3042] rounded-md text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-rose-500/60"
+          className="gba-well w-full px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none"
         />
       </section>
     </main>
@@ -829,13 +849,13 @@ function TrainerGearPanel({
   };
 
   return (
-    <section className="bg-[#161A24] border border-[#252A38] rounded-lg p-4 space-y-3">
+    <section className="gba-panel p-4 space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-display text-sm font-semibold text-slate-200">
-          Pokéballs & Trainer Specializations
+        <h3 className="font-display text-xs font-bold text-slate-100 uppercase">
+          Bag · Pokéballs &amp; Paths
         </h3>
         {trainer.trainerPaths && (
-          <span className="text-xs text-slate-400">{trainer.trainerPaths}</span>
+          <span className="text-xs text-[#F6C445]">{trainer.trainerPaths}</span>
         )}
       </div>
 
@@ -849,27 +869,27 @@ function TrainerGearPanel({
         ).map((item) => (
           <div
             key={item.key}
-            className="flex items-center justify-between px-3 py-2 bg-[#12151E] border border-[#222736] rounded-md"
+            className="gba-well flex items-center justify-between px-3 py-2"
           >
-            <span className="inline-flex items-center gap-2 text-xs text-slate-200 font-medium">
+            <span className="inline-flex items-center gap-2 text-xs text-slate-100 font-medium">
               <PokeballIcon variant={item.variant} className="w-4 h-4 shrink-0" />
               <span>{item.label}</span>
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => adjustBall(item.key, -1)}
-                className="w-6 h-6 rounded bg-[#0F1117] border border-[#2A3042] text-slate-300 hover:text-white cursor-pointer"
+                className="gba-btn w-6 h-6 bg-[#1B242E] hover:bg-[#253240] text-slate-200 cursor-pointer"
               >
                 -
               </button>
-              <span className="font-mono text-sm font-semibold text-slate-100 w-6 text-center">
+              <span className="font-mono text-xs font-bold text-white w-6 text-center">
                 {trainer.pokeballs[item.key]}
               </span>
               <button
                 type="button"
                 onClick={() => adjustBall(item.key, 1)}
-                className="w-6 h-6 rounded bg-[#0F1117] border border-[#2A3042] text-slate-300 hover:text-white cursor-pointer"
+                className="gba-btn w-6 h-6 bg-[#1B242E] hover:bg-[#253240] text-slate-200 cursor-pointer"
               >
                 +
               </button>
