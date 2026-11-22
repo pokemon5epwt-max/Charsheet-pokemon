@@ -16,7 +16,7 @@ import {
 interface MovesPanelProps {
   pokemon: PokemonSheet;
   onRollAttack: (move: Move) => void;
-  onRollDamage: (move: Move) => void;
+  onRollDamage: (move: Move, isCriticalDamage?: boolean) => void;
   onAdjustPp: (moveId: string, delta: number) => void;
   onAddMove: (move: Omit<Move, 'id'>) => void;
   onRemoveMove: (moveId: string) => void;
@@ -342,20 +342,31 @@ export function MovesPanel({
                   )}
 
                   {move.damageDice && (
-                    <button
-                      type="button"
-                      onClick={() => onRollDamage(move)}
-                      className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-white bg-rose-600/90 hover:bg-rose-500 rounded-md transition-colors cursor-pointer"
-                    >
-                      <Flame className="w-3.5 h-3.5" />
-                      <span>Roll Damage</span>
-                      <span className="font-mono">
-                        {move.damageDice}
-                        {dmgInfo.totalBonus !== 0
-                          ? ` ${formatSignedModifier(dmgInfo.totalBonus)}`
-                          : ''}
-                      </span>
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        onClick={() => onRollDamage(move, false)}
+                        className="inline-flex items-center gap-2 px-3.5 py-2 text-xs font-semibold text-white bg-rose-600/90 hover:bg-rose-500 rounded-md transition-colors cursor-pointer"
+                      >
+                        <Flame className="w-3.5 h-3.5" />
+                        <span>Roll Damage</span>
+                        <span className="font-mono">
+                          {move.damageDice}
+                          {dmgInfo.totalBonus !== 0
+                            ? ` ${formatSignedModifier(dmgInfo.totalBonus)}`
+                            : ''}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onRollDamage(move, true)}
+                        title="Roll Critical Hit Damage (2× damage dice)"
+                        className="inline-flex items-center gap-1 px-2.5 py-2 text-xs font-semibold text-amber-200 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 rounded-md transition-colors cursor-pointer"
+                      >
+                        <span>Crit 2×</span>
+                      </button>
+                    </>
                   )}
 
                   {!move.isAttack && !move.damageDice && (

@@ -1,6 +1,7 @@
 import { Dices, Eye, EyeOff, Lock, Trash2, X } from 'lucide-react';
 import { useState } from 'react';
 import { selectActiveCharacter, useCharacterStore } from '../store/useCharacterStore';
+import { parseDiceExpression } from '../utils/diceEngine';
 import { TYPE_STYLES } from '../utils/pokemon5eRules';
 import { PokeballIcon } from './PokemonAccessories';
 
@@ -23,16 +24,26 @@ export function RollLogPanel({ onCloseMobile }: RollLogPanelProps) {
   const clearRollLog = useCharacterStore((s) => s.clearRollLog);
 
   const [customExpr, setCustomExpr] = useState('1d20 + 5');
+  const [customError, setCustomError] = useState<string | null>(null);
 
   const handleCustomRoll = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!customExpr.trim()) return;
+    const trimmed = customExpr.trim();
+    if (!trimmed) return;
+    const parsed = parseDiceExpression(trimmed);
+    if (!parsed.isValid) {
+      setCustomError(
+        `Format tidak valid (${parsed.error ?? 'contoh: 1d20 + 5 atau 4d6kh3'})`
+      );
+      return;
+    }
+    setCustomError(null);
     performRoll({
       characterId: activeChar.id,
       characterName: activeChar.name,
-      label: `Custom (${customExpr.trim()})`,
+      label: `Custom (${trimmed})`,
       category: 'custom',
-      diceExpression: customExpr.trim(),
+      diceExpression: trimmed,
     });
   };
 
@@ -138,23 +149,31 @@ export function RollLogPanel({ onCloseMobile }: RollLogPanelProps) {
         </div>
 
         {/* Custom Dice Expression */}
-        <form onSubmit={handleCustomRoll} className="flex items-center gap-1.5">
-          <input
-            type="text"
-            value={customExpr}
-            onChange={(e) => setCustomExpr(e.target.value)}
-            placeholder="2d6 + 4"
-            aria-label="Custom dice formula"
-            className="flex-1 px-2.5 py-1.5 text-xs font-mono bg-[#0F1117] border border-[#2A3042] rounded-md text-slate-100 focus:outline-none focus:border-rose-500/60"
-          />
-          <button
-            type="submit"
-            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-rose-600 hover:bg-rose-500 rounded-md cursor-pointer shrink-0"
-          >
-            <Dices className="w-3.5 h-3.5" />
-            <span>Roll</span>
-          </button>
-        </form>
+        <div>
+          <form onSubmit={handleCustomRoll} className="flex items-center gap-1.5">
+            <input
+              type="text"
+              value={customExpr}
+              onChange={(e) => {
+                setCustomExpr(e.target.value);
+                if (customError) setCustomError(null);
+              }}
+              placeholder="2d6 + 4 atau 4d6kh3"
+              aria-label="Custom dice formula"
+              className="flex-1 px-2.5 py-1.5 text-xs font-mono bg-[#0F1117] border border-[#2A3042] rounded-md text-slate-100 focus:outline-none focus:border-rose-500/60"
+            />
+            <button
+              type="submit"
+              className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-rose-600 hover:bg-rose-500 rounded-md cursor-pointer shrink-0"
+            >
+              <Dices className="w-3.5 h-3.5" />
+              <span>Roll</span>
+            </button>
+          </form>
+          {customError && (
+            <p className="text-[11px] text-rose-400 mt-1">{customError}</p>
+          )}
+        </div>
 
         {/* Dice Integration Mode */}
         <div className="flex items-center justify-between pt-1 border-t border-[#222736] text-[11px]">

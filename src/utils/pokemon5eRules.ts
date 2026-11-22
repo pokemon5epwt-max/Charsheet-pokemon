@@ -196,20 +196,15 @@ export function getProficiencyBonus(level: number, override?: number): number {
 }
 
 /**
- * Pokémon 5e STAB Progression:
- * Lv 1-2: +1 | Lv 3-6: +2 | Lv 7-10: +3 | Lv 11-14: +4 | Lv 15-18: +5 | Lv 19-20: +6
+ * Pokémon 5e STAB Progression (2018 Ruleset):
+ * Lv 1-2: +0 | Lv 3-6: +1 | Lv 7-10: +2 | Lv 11-14: +3 | Lv 15-18: +4 | Lv 19-20: +5
  */
 export function getStabValue(level: number, override?: number): number {
   if (typeof override === 'number' && !Number.isNaN(override)) {
-    return override;
+    return Math.max(0, override);
   }
   const lv = Math.max(1, Math.min(20, Math.floor(level || 1)));
-  if (lv <= 2) return 1;
-  if (lv <= 6) return 2;
-  if (lv <= 10) return 3;
-  if (lv <= 14) return 4;
-  if (lv <= 18) return 5;
-  return 6;
+  return Math.floor((lv + 1) / 4);
 }
 
 export function getSavingThrowModifier(

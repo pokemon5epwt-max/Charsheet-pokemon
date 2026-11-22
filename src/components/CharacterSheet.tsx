@@ -13,6 +13,7 @@ import {
 import {
   ABILITY_LABELS,
   POKEMON_TYPES,
+  SKILL_ABILITY_MAP,
   TYPE_STYLES,
   formatSignedModifier,
   getAbilityModifier,
@@ -139,18 +140,18 @@ export function CharacterSheet() {
 
   const handleRollSkill = (skill: SkillName) => {
     const level = activeChar.skills[skill];
+    const abilityKey = SKILL_ABILITY_MAP[skill];
+    const baseMod = getAbilityModifier(activeChar.abilities[abilityKey]);
     const totalMod = getSkillModifier(
       activeChar.abilities,
       activeChar.skills,
       skill,
       profBonus
     );
-    const parts = [`Mod(${formatSignedModifier(totalMod)})`];
+    const parts = [`${ABILITY_LABELS[abilityKey].short}(${formatSignedModifier(baseMod)})`];
     if (level === 'proficient') {
-      parts[0] = `Base(${formatSignedModifier(totalMod - profBonus)})`;
       parts.push(`Prof(${formatSignedModifier(profBonus)})`);
     } else if (level === 'expertise') {
-      parts[0] = `Base(${formatSignedModifier(totalMod - profBonus * 2)})`;
       parts.push(`Exp(${formatSignedModifier(profBonus * 2)})`);
     }
 
@@ -198,7 +199,7 @@ export function CharacterSheet() {
     });
   };
 
-  const handleRollMoveDamage = (move: Move) => {
+  const handleRollMoveDamage = (move: Move, isCriticalDamage = false) => {
     if (!isPokemon) return;
     const { powerMod, stabBonus, totalBonus } = getMoveDamageBonus(activeChar, move);
     const parts = [
@@ -217,6 +218,7 @@ export function CharacterSheet() {
       modifier: totalBonus,
       modifierParts: parts,
       moveType: move.type,
+      isCriticalDamage,
     });
   };
 

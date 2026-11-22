@@ -19,7 +19,8 @@ export default function App() {
   const [showMobileLog, setShowMobileLog] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
-  const prevLogLenRef = useRef(rollLog.length);
+  const latestRollId = rollLog[0]?.id;
+  const prevLatestIdRef = useRef<string | undefined>(latestRollId);
 
   // Initialize Owlbear Rodeo SDK bridge (gracefully falls back when outside OBR)
   useEffect(() => {
@@ -32,11 +33,11 @@ export default function App() {
 
   // Track unread rolls on viewports where the Roll Log drawer is collapsed
   useEffect(() => {
-    if (rollLog.length > prevLogLenRef.current && !showMobileLog) {
-      setUnreadCount((c) => c + (rollLog.length - prevLogLenRef.current));
+    if (latestRollId && latestRollId !== prevLatestIdRef.current && !showMobileLog) {
+      setUnreadCount((c) => c + 1);
     }
-    prevLogLenRef.current = rollLog.length;
-  }, [rollLog.length, showMobileLog]);
+    prevLatestIdRef.current = latestRollId;
+  }, [latestRollId, showMobileLog]);
 
   const handleToggleMobileLog = () => {
     setShowMobileLog((prev) => {
@@ -76,14 +77,28 @@ export default function App() {
         <button
           type="button"
           onClick={handleToggleMobileLog}
-          className="xl:hidden px-4 py-2 bg-[#161A24] border-b border-[#252A38] flex items-center justify-between text-xs text-left cursor-pointer"
+          className={`xl:hidden px-4 py-2 border-b flex items-center justify-between text-xs text-left cursor-pointer ${
+            latestRoll.visibility === 'hidden'
+              ? 'bg-violet-950/35 border-violet-500/35'
+              : 'bg-[#161A24] border-[#252A38]'
+          }`}
         >
           <span className="truncate text-slate-300">
-            Last roll: <strong className="text-slate-100">{latestRoll.characterName}</strong> —{' '}
+            {latestRoll.visibility === 'hidden' ? '[Hidden] ' : ''}
+            <strong className="text-slate-100">{latestRoll.characterName}</strong> —{' '}
             {latestRoll.label} ({latestRoll.breakdown})
           </span>
-          <span className="font-mono font-bold text-rose-400 ml-3 shrink-0">
+          <span
+            className={`font-mono font-bold ml-3 shrink-0 ${
+              latestRoll.isCrit
+                ? 'text-emerald-400'
+                : latestRoll.isFumble
+                  ? 'text-rose-400'
+                  : 'text-rose-300'
+            }`}
+          >
             {latestRoll.total}
+            {latestRoll.isCrit ? ' CRIT' : latestRoll.isFumble ? ' NAT 1' : ''}
           </span>
         </button>
       )}
