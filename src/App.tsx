@@ -140,7 +140,7 @@ export default function App() {
             role="tab"
             aria-selected={activeTab === 'history'}
             onClick={() => handleSelectTab('history')}
-            className={`gba-btn xl:hidden inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium whitespace-nowrap shrink-0 cursor-pointer ${
+            className={`gba-btn inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium whitespace-nowrap shrink-0 cursor-pointer ${
               activeTab === 'history'
                 ? 'bg-[#283747] text-[#38D46A]'
                 : 'bg-[#131A22] text-slate-400 hover:text-slate-100'
@@ -222,22 +222,14 @@ export default function App() {
 
         {activeTab === 'sheet' && <CharacterSheet />}
         {activeTab === 'initiative' && <InitiativeTable />}
-        {activeTab === 'history' && (
-          <div className="xl:hidden flex-1 flex flex-col min-h-0">
-            <RollLogPanel isFullWidth />
-          </div>
-        )}
-        {/* On xl+ viewports, if someone somehow stays on 'history' after widening, show CharacterSheet in center */}
-        {activeTab === 'history' && (
-          <div className="hidden xl:flex flex-1 min-h-0">
-            <CharacterSheet />
-          </div>
-        )}
+        {activeTab === 'history' && <RollLogPanel isFullWidth />}
 
-        {/* Desktop Docked Roll Log */}
-        <div className="hidden xl:flex h-full">
-          <RollLogPanel />
-        </div>
+        {/* Desktop Docked Roll Log (hidden when dedicated full History tab is open) */}
+        {activeTab !== 'history' && (
+          <div className="hidden xl:flex h-full">
+            <RollLogPanel onExpandTab={() => handleSelectTab('history')} />
+          </div>
+        )}
       </div>
 
       {showImportModal && (

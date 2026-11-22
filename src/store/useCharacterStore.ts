@@ -466,7 +466,7 @@ export const useCharacterStore = create<CharacterStoreState>()(
         set((state) => {
           const initiativePatch = upsertInitiativeFromRoll(state, entry);
           return {
-            rollLog: [entry, ...state.rollLog].slice(0, 60),
+            rollLog: [entry, ...state.rollLog].slice(0, 120),
             ...(initiativePatch ?? {}),
             ...(initiativePatch && entry.visibility === 'visible'
               ? { initiativeUpdatedAt: now }
@@ -500,7 +500,7 @@ export const useCharacterStore = create<CharacterStoreState>()(
           }
           const initiativePatch = upsertInitiativeFromRoll(state, roll);
           return {
-            rollLog: [roll, ...state.rollLog].slice(0, 60),
+            rollLog: [roll, ...state.rollLog].slice(0, 120),
             ...(initiativePatch ?? {}),
           };
         }),
@@ -524,7 +524,7 @@ export const useCharacterStore = create<CharacterStoreState>()(
 
           const combinedLog = [...unseen, ...state.rollLog]
             .sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp))
-            .slice(0, 60);
+            .slice(0, 120);
 
           let nextInitState = {
             party: state.party,
@@ -819,7 +819,7 @@ export const useCharacterStore = create<CharacterStoreState>()(
         rollMode: state.rollMode,
         rollVisibility: state.rollVisibility,
         diceIntegrationMode: state.diceIntegrationMode,
-        rollLog: state.rollLog.slice(0, 30),
+        rollLog: state.rollLog.slice(0, 60),
         rollLogClearedAt: state.rollLogClearedAt,
         initiativeList: state.initiativeList,
         initiativeTurnIndex: state.initiativeTurnIndex,

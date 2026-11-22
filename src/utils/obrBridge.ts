@@ -266,7 +266,7 @@ export async function broadcastRollToObr(
               (r) => r && typeof r === 'object' && r.id && r.id !== roll.id
             )
           : [];
-        const updated = [roll, ...existing].slice(0, 40);
+        const updated = [roll, ...existing].slice(0, 60);
         await OBR.room.setMetadata({
           [ROOM_ROLLS_METADATA_KEY]: updated,
         });

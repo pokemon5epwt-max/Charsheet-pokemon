@@ -156,6 +156,15 @@ export type RollCategory =
   | 'initiative'
   | 'custom';
 
+export interface DieChip {
+  sides: number;
+  value: number;
+  kept: boolean;
+  exploded?: boolean;
+  rerolled?: boolean;
+  originalValue?: number;
+}
+
 export interface RollEntry {
   id: string;
   timestamp: string;
@@ -169,6 +178,7 @@ export interface RollEntry {
   visibility: RollVisibility;
   formula: string;
   diceRolls: number[];
+  dieChips?: DieChip[];
   selectedDie?: number;
   total: number;
   breakdown: string;

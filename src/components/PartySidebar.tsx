@@ -1,4 +1,5 @@
 import { Minus, Plus, Shield, Sparkles, Trash2, User } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import { useCharacterStore } from '../store/useCharacterStore';
 import { TYPE_STYLES } from '../utils/pokemon5eRules';
 import { LeagueBadgeIcon, PixelCursor, PokeballIcon } from './PokemonAccessories';
@@ -24,6 +25,23 @@ export function PartySidebar({
   const adjustHp = useCharacterStore((s) => s.adjustHp);
   const removePokemon = useCharacterStore((s) => s.removePokemon);
   const longRestParty = useCharacterStore((s) => s.longRestParty);
+  const beltRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = beltRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (el.scrollWidth <= el.clientWidth) return;
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX) && e.deltaY !== 0) {
+        e.preventDefault();
+        el.scrollLeft += e.deltaY;
+      }
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [party.pokemon.length]);
 
   const selectCharacter = (id: 'trainer' | string) => {
     setActiveCharacter(id);
@@ -38,7 +56,10 @@ export function PartySidebar({
   return (
     <>
       {/* Compact GBA Party Belt for Medium Owlbear Popover & Mobile (< lg) */}
-      <div className="lg:hidden border-b-2 border-[#090D12] bg-[#17202A] px-3 py-2 shrink-0 flex items-center gap-2 overflow-x-auto">
+      <div
+        ref={beltRef}
+        className="lg:hidden border-b-2 border-[#090D12] bg-[#17202A] px-3 py-2 shrink-0 flex items-center gap-2 overflow-x-auto"
+      >
         <button
           type="button"
           onClick={() => selectCharacter('trainer')}
@@ -152,8 +173,8 @@ export function PartySidebar({
       </div>
 
       {/* Full Left GBA 6-Slot Party Menu for Wide Desktop (lg+) */}
-      <aside className="hidden lg:flex w-[276px] shrink-0 border-r-2 border-[#090D12] bg-[#17202A] flex-col">
-        <div className="p-3.5 flex-1 overflow-y-auto space-y-4">
+      <aside className="hidden lg:flex w-[276px] h-full min-h-0 shrink-0 border-r-2 border-[#090D12] bg-[#17202A] flex-col">
+        <div className="p-3.5 flex-1 min-h-0 overflow-y-auto space-y-4">
           {/* Trainer Slot */}
           <section>
             <div className="flex items-center justify-between mb-2">
