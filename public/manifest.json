@@ -1,9 +1,9 @@
 {
-  "name": "Pokémon 5e Character Sheet",
+  "name": "Pokémon 5e Sheet",
   "version": "1.0.0",
   "manifest_version": 1,
-  "author": "Pokémon 5e Tabletop Tools",
-  "description": "Manage your Pokémon 5e Trainer and party of up to 6 Pokémon, roll checks and moves with pre-calculated STAB and Proficiency modifiers, toggle GM-only hidden rolls, and import sheets from poke5e.app.",
+  "author": "Pokémon 5e Tools",
+  "description": "Pokémon 5e character sheet for Owlbear Rodeo with STAB/Proficiency rolls, hidden GM rolls, and poke5e.app import.",
   "icon": "/icon.svg",
   "action": {
     "title": "Pokémon 5e Sheet",
