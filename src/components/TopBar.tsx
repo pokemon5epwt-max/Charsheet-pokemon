@@ -1,7 +1,18 @@
-import { Download, FileUp, History, Maximize2, Minimize2, RotateCcw } from 'lucide-react';
+import OBR from '@owlbear-rodeo/sdk';
+import {
+  Check,
+  Download,
+  FileUp,
+  History,
+  Maximize2,
+  Minimize2,
+  RefreshCw,
+  RotateCcw,
+} from 'lucide-react';
 import { useState } from 'react';
 import { useCharacterStore } from '../store/useCharacterStore';
 import { setObrPopoverSize } from '../utils/obrBridge';
+import { importFromPoke5eLink } from '../utils/poke5eImporter';
 import { PokedexLens } from './PokemonAccessories';
 
 interface TopBarProps {
@@ -18,8 +29,58 @@ export function TopBar({
   unreadLogCount,
 }: TopBarProps) {
   const obrState = useCharacterStore((s) => s.obrState);
+  const party = useCharacterStore((s) => s.party);
+  const importHistory = useCharacterStore((s) => s.importHistory);
+  const loadSavedTrainer = useCharacterStore((s) => s.loadSavedTrainer);
+  const updatePartyFromImport = useCharacterStore((s) => s.updatePartyFromImport);
   const resetToStarterParty = useCharacterStore((s) => s.resetToStarterParty);
   const [isExpandedObr, setIsExpandedObr] = useState(false);
+  const [isUpdatingSheet, setIsUpdatingSheet] = useState(false);
+  const [justUpdated, setJustUpdated] = useState(false);
+
+  const activeLinkedKey =
+    party.trainer.poke5eMeta?.readKey || party.trainer.poke5eMeta?.trainerId || '';
+  const fallbackSaved = !activeLinkedKey
+    ? importHistory.find((item) => Boolean(item.readKey || item.trainerId))
+    : undefined;
+  const linkedKey =
+    activeLinkedKey || fallbackSaved?.readKey || fallbackSaved?.trainerId || '';
+  const targetTrainerName =
+    activeLinkedKey ? party.trainer.name : fallbackSaved?.trainerName || party.trainer.name;
+
+  const handleQuickUpdateSheet = async () => {
+    if (!linkedKey || isUpdatingSheet) return;
+    setIsUpdatingSheet(true);
+    setJustUpdated(false);
+    try {
+      if (fallbackSaved) {
+        loadSavedTrainer(fallbackSaved.id);
+      }
+      const result = await importFromPoke5eLink(linkedKey);
+      if (result.success && result.workspace) {
+        updatePartyFromImport(result.workspace, 'link');
+        setJustUpdated(true);
+        setTimeout(() => setJustUpdated(false), 2500);
+        if (OBR.isAvailable && OBR.isReady) {
+          void OBR.notification
+            .show(
+              `Sheet "${result.workspace.trainer.name}" (${result.workspace.pokemon.length} Pokémon) updated from poke5e.app`,
+              'SUCCESS'
+            )
+            .catch(() => {});
+        }
+      } else {
+        if (OBR.isAvailable && OBR.isReady) {
+          void OBR.notification
+            .show(result.message || 'Gagal update dari poke5e.app', 'ERROR')
+            .catch(() => {});
+        }
+        onOpenImport();
+      }
+    } finally {
+      setIsUpdatingSheet(false);
+    }
+  };
 
   const handleToggleObrSize = () => {
     const next = !isExpandedObr;
@@ -50,6 +111,27 @@ export function TopBar({
           <FileUp className="w-3.5 h-3.5 text-[#F6C445]" />
           <span>Import</span>
         </button>
+
+        {linkedKey && (
+          <button
+            type="button"
+            disabled={isUpdatingSheet}
+            onClick={() => void handleQuickUpdateSheet()}
+            title={`Update sheet "${targetTrainerName}" dari poke5e.app`}
+            className="gba-btn inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold text-white bg-[#267347] hover:bg-[#2E8A56] disabled:opacity-60 whitespace-nowrap shrink-0 cursor-pointer"
+          >
+            {justUpdated ? (
+              <Check className="w-3.5 h-3.5 text-[#F6C445]" />
+            ) : (
+              <RefreshCw
+                className={`w-3.5 h-3.5 ${isUpdatingSheet ? 'animate-spin' : ''}`}
+              />
+            )}
+            <span>
+              {isUpdatingSheet ? 'Sync...' : justUpdated ? 'Updated' : 'Update'}
+            </span>
+          </button>
+        )}
 
         <button
           type="button"

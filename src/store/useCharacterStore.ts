@@ -12,6 +12,7 @@ import {
   RollEntry,
   RollMode,
   RollVisibility,
+  SavedTrainerProfile,
   TrainerSheet,
 } from '../types/pokemon5e';
 import { executeRoll, RollRequest } from '../utils/diceEngine';
@@ -143,6 +144,47 @@ function isRemoteInitiativeEquivalent(
   return true;
 }
 
+function upsertSavedTrainerProfile(
+  history: SavedTrainerProfile[],
+  workspace: PartyWorkspace,
+  source: 'link' | 'file' | 'json'
+): SavedTrainerProfile[] {
+  const trainer: TrainerSheet = {
+    ...workspace.trainer,
+    id: 'trainer',
+    kind: 'trainer',
+  };
+  const pokemon = workspace.pokemon.slice(0, 6);
+  const readKey = trainer.poke5eMeta?.readKey?.trim() || undefined;
+  const trainerId = trainer.poke5eMeta?.trainerId?.trim() || undefined;
+  const id =
+    readKey ||
+    trainerId ||
+    `local:${(trainer.name || 'trainer').trim().toLowerCase()}`;
+
+  const profile: SavedTrainerProfile = {
+    id,
+    trainerName: trainer.name || 'Imported Trainer',
+    trainerLevel: trainer.level,
+    trainerClass: trainer.trainerClass || 'Pokémon Trainer',
+    pokemonCount: pokemon.length,
+    pokemonSummary: pokemon.map((p) => p.name).join(', '),
+    source,
+    readKey,
+    trainerId,
+    lastImportedAt: new Date().toISOString(),
+    workspace: { trainer, pokemon },
+  };
+
+  const remaining = history.filter(
+    (item) =>
+      item.id !== id &&
+      !(readKey && item.readKey === readKey) &&
+      !(trainerId && item.trainerId === trainerId)
+  );
+  return [profile, ...remaining].slice(0, 12);
+}
+
 interface CharacterStoreState {
   party: PartyWorkspace;
   activeCharacterId: 'trainer' | string;
@@ -183,8 +225,18 @@ interface CharacterStoreState {
   adjustMovePp: (pokemonId: string, moveId: string, delta: number) => void;
 
   // Rest & Utility
+  importHistory: SavedTrainerProfile[];
   longRestParty: () => void;
-  replaceParty: (workspace: PartyWorkspace) => void;
+  replaceParty: (
+    workspace: PartyWorkspace,
+    source?: 'link' | 'file' | 'json'
+  ) => void;
+  updatePartyFromImport: (
+    workspace: PartyWorkspace,
+    source?: 'link' | 'file' | 'json'
+  ) => void;
+  loadSavedTrainer: (profileId: string) => void;
+  removeSavedTrainer: (profileId: string) => void;
   resetToStarterParty: () => void;
 
   // Rolling
@@ -228,6 +280,7 @@ export const useCharacterStore = create<CharacterStoreState>()(
       initiativeTurnIndex: 0,
       initiativeRound: 1,
       initiativeUpdatedAt: undefined,
+      importHistory: [],
       obrState: {
         isAvailable: false,
         isReady: false,
@@ -437,14 +490,105 @@ export const useCharacterStore = create<CharacterStoreState>()(
           },
         })),
 
-      replaceParty: (workspace) =>
-        set({
-          party: {
+      replaceParty: (workspace, source = 'json') =>
+        set((state) => {
+          const cleanWorkspace: PartyWorkspace = {
             trainer: { ...workspace.trainer, id: 'trainer', kind: 'trainer' },
             pokemon: workspace.pokemon.slice(0, 6),
-          },
-          activeCharacterId: 'trainer',
+          };
+          return {
+            party: cleanWorkspace,
+            activeCharacterId: 'trainer',
+            importHistory: upsertSavedTrainerProfile(
+              state.importHistory,
+              cleanWorkspace,
+              source
+            ),
+          };
         }),
+
+      updatePartyFromImport: (workspace, source = 'link') =>
+        set((state) => {
+          const prevTrainer = state.party.trainer;
+          const nextTrainer: TrainerSheet = {
+            ...workspace.trainer,
+            id: 'trainer',
+            kind: 'trainer',
+            badges:
+              workspace.trainer.badges > 0
+                ? workspace.trainer.badges
+                : prevTrainer.badges,
+            tempHp:
+              workspace.trainer.tempHp > 0
+                ? workspace.trainer.tempHp
+                : prevTrainer.tempHp,
+            proficiencyOverride:
+              workspace.trainer.proficiencyOverride ?? prevTrainer.proficiencyOverride,
+            notes: workspace.trainer.notes.trim()
+              ? workspace.trainer.notes
+              : prevTrainer.notes,
+            poke5eMeta: workspace.trainer.poke5eMeta ?? prevTrainer.poke5eMeta,
+          };
+
+          const nextPokemon: PokemonSheet[] = workspace.pokemon
+            .slice(0, 6)
+            .map((incoming) => {
+              const existing =
+                state.party.pokemon.find((p) => p.id === incoming.id) ??
+                state.party.pokemon.find(
+                  (p) =>
+                    p.species.toLowerCase() === incoming.species.toLowerCase() &&
+                    p.name.toLowerCase() === incoming.name.toLowerCase()
+                );
+
+              if (!existing) return incoming;
+              return {
+                ...incoming,
+                tempHp: incoming.tempHp > 0 ? incoming.tempHp : existing.tempHp,
+                stabOverride: incoming.stabOverride ?? existing.stabOverride,
+                proficiencyOverride:
+                  incoming.proficiencyOverride ?? existing.proficiencyOverride,
+                notes: incoming.notes.trim() ? incoming.notes : existing.notes,
+              };
+            });
+
+          const stillHasActive =
+            state.activeCharacterId === 'trainer' ||
+            nextPokemon.some((p) => p.id === state.activeCharacterId);
+
+          const mergedWorkspace: PartyWorkspace = {
+            trainer: nextTrainer,
+            pokemon: nextPokemon,
+          };
+
+          return {
+            party: mergedWorkspace,
+            activeCharacterId: stillHasActive ? state.activeCharacterId : 'trainer',
+            importHistory: upsertSavedTrainerProfile(
+              state.importHistory,
+              mergedWorkspace,
+              source
+            ),
+          };
+        }),
+
+      loadSavedTrainer: (profileId) =>
+        set((state) => {
+          const found = state.importHistory.find((item) => item.id === profileId);
+          if (!found) return state;
+          return {
+            party: {
+              trainer: { ...found.workspace.trainer, id: 'trainer', kind: 'trainer' },
+              pokemon: found.workspace.pokemon.slice(0, 6),
+            },
+            activeCharacterId: 'trainer',
+          };
+        }),
+
+      removeSavedTrainer: (profileId) =>
+        set((state) => ({
+          importHistory: state.importHistory.filter((item) => item.id !== profileId),
+        })),
 
       resetToStarterParty: () =>
         set({
@@ -825,6 +969,7 @@ export const useCharacterStore = create<CharacterStoreState>()(
         initiativeTurnIndex: state.initiativeTurnIndex,
         initiativeRound: state.initiativeRound,
         initiativeUpdatedAt: state.initiativeUpdatedAt,
+        importHistory: state.importHistory.slice(0, 12),
       }),
     }
   )

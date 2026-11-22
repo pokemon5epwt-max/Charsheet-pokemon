@@ -237,3 +237,17 @@ export interface Poke5eImportResult {
   workspace?: PartyWorkspace;
   extractedKeys?: Poke5eFileEntry[];
 }
+
+export interface SavedTrainerProfile {
+  id: string;
+  trainerName: string;
+  trainerLevel: number;
+  trainerClass: string;
+  pokemonCount: number;
+  pokemonSummary: string;
+  source: 'link' | 'file' | 'json';
+  readKey?: string;
+  trainerId?: string;
+  lastImportedAt: string;
+  workspace: PartyWorkspace;
+}

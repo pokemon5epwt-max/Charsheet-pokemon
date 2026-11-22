@@ -867,6 +867,10 @@ export function normalizeJsonToWorkspace(rawJson: unknown): PartyWorkspace | nul
       badges: Number(t.badges ?? 0),
       trainerPaths: String(t.trainerPaths || ''),
       notes: String(t.notes || ''),
+      poke5eMeta:
+        t.poke5eMeta && typeof t.poke5eMeta === 'object'
+          ? (t.poke5eMeta as TrainerSheet['poke5eMeta'])
+          : undefined,
     };
 
     const pokemon = obj.pokemon
